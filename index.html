@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LABIS — Master Retail Dashboard</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts: Plus Jakarta Sans & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- QRCode.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    
+    <!-- Supabase JS Client CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- Tailwind Custom Configuration -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                    },
+                    colors: {
+                        // Dark mode palette (LittleBee style)
+                        'lb-bg': '#0a100d',
+                        'lb-card': '#121c17',
+                        'lb-card-hover': '#18251f',
+                        'lb-border': 'rgba(255, 255, 255, 0.08)',
+                        'lb-lime': '#b0f347',
+                        'lb-lime-hover': '#9de234',
+                        'lb-lime-muted': 'rgba(176, 243, 71, 0.15)',
+                        'lb-text-muted': '#82958b',
+                        
+                        // Light mode palette (Donezo style)
+                        'dz-bg': '#f3f4f6',
+                        'dz-card': '#ffffff',
+                        'dz-border': '#e5e7eb',
+                        'dz-forest': '#166534',
+                        'dz-forest-hover': '#14532d',
+                        'dz-forest-light': 'rgba(22, 101, 52, 0.08)',
+                        'dz-text': '#1f2937',
+                        'dz-text-muted': '#6b7280'
+                    },
+                    boxShadow: {
+                        'lb-glow': '0 0 25px -5px rgba(176, 243, 71, 0.25)',
+                        'lb-card-glow': '0 10px 30px -10px rgba(0, 0, 0, 0.5), inset 0 1px 0 0 rgba(255, 255, 255, 0.05)',
+                        'dz-card-shadow': '0 4px 20px -2px rgba(0, 0, 0, 0.03), 0 2px 6px -1px rgba(0, 0, 0, 0.02)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Custom Stylesheet -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-dz-bg dark:bg-lb-bg text-dz-text dark:text-gray-100 min-h-screen flex flex-col antialiased selection:bg-lb-lime selection:text-black">
+
+    <!-- Mobile Drawer Backdrop Overlay -->
+    <div id="sidebar-overlay" onclick="closeMobileMenu()" aria-hidden="true"></div>
+
+    <div class="flex h-screen overflow-hidden p-2 sm:p-3 md:p-4 gap-3 md:gap-4 relative">
+        
+        <!-- SIDEBAR NAVIGATION (Desktop: Multi-col / Tablet: Collapsible / Mobile: Drawer) -->
+        <aside id="sidebar" class="w-64 flex-shrink-0 bg-dz-card dark:bg-lb-card rounded-3xl border border-dz-border dark:border-lb-border flex flex-col justify-between p-5 shadow-dz-card-shadow dark:shadow-lb-card-glow transition-all duration-300 z-50 md:z-30">
+            
+            <div class="space-y-6">
+                <!-- LOGO HEADER -->
+                <div class="flex items-center justify-between px-2">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-2xl bg-dz-forest dark:bg-lb-lime text-white dark:text-black flex items-center justify-center font-extrabold text-xl shadow-md transition-all flex-shrink-0">
+                            <i class="fa-solid font-bold">L</i>
+                        </div>
+                        <div class="logo-text">
+                            <h1 class="text-xl font-extrabold tracking-tight text-dz-forest dark:text-white flex items-center gap-1.5">
+                                LABIS
+                                <span class="text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded-full bg-dz-forest-light dark:bg-lb-lime-muted text-dz-forest dark:text-lb-lime">Cloth</span>
+                            </h1>
+                            <p class="text-[11px] text-dz-text-muted dark:text-lb-text-muted font-medium">Master Retail Platform</p>
+                        </div>
+                    </div>
+                    <!-- Close button for Mobile Drawer -->
+                    <button onclick="closeMobileMenu()" class="md:hidden w-8 h-8 rounded-xl bg-gray-100 dark:bg-lb-bg text-dz-text-muted dark:text-lb-text-muted flex items-center justify-center hover:text-red-500 transition" aria-label="Close sidebar">
+                        <i class="fa-solid fa-xmark text-sm"></i>
+                    </button>
+                </div>
+
+                <!-- NAVIGATION GROUP: MENU -->
+                <div class="space-y-1">
+                    <p class="nav-group-label px-3 text-[10px] font-bold tracking-wider text-dz-text-muted dark:text-lb-text-muted uppercase mb-2">Menu</p>
+                    
+                    <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn nav-item w-full flex items-center gap-3 px-3.5 py-3 rounded-2xl font-semibold text-sm transition-all duration-200 text-dz-text-muted dark:text-lb-text-muted hover:bg-gray-100 dark:hover:bg-lb-card-hover min-h-[44px]">
+                        <i class="fa-solid fa-chart-pie w-5 text-center"></i>
+                        <span>Dashboard</span>
+                    </button>
+
+                    <button onclick="switchTab('shops')" id="nav-shops" class="nav-btn nav-item w-full flex items-center gap-3 px-3.5 py-3 rounded-2xl font-semibold text-sm transition-all duration-200 text-dz-text-muted dark:text-lb-text-muted hover:bg-gray-100 dark:hover:bg-lb-card-hover min-h-[44px]">
+                        <i class="fa-solid fa-store w-5 text-center"></i>
+                        <span>Stores & Shops</span>
+                    </button>
+
+                    <button onclick="switchTab('garments')" id="nav-garments" class="nav-btn nav-item w-full flex items-center gap-3 px-3.5 py-3 rounded-2xl font-semibold text-sm transition-all duration-200 text-dz-text-muted dark:text-lb-text-muted hover:bg-gray-100 dark:hover:bg-lb-card-hover min-h-[44px]">
+                        <i class="fa-solid fa-shirt w-5 text-center"></i>
+                        <span>Garments Catalog</span>
+                        <span id="garment-badge-count" class="ml-auto text-xs px-2 py-0.5 rounded-full bg-dz-forest-light dark:bg-lb-lime-muted text-dz-forest dark:text-lb-lime font-bold">0</span>
+                    </button>
+
+                    <button onclick="switchTab('leads')" id="nav-leads" class="nav-btn nav-item w-full flex items-center gap-3 px-3.5 py-3 rounded-2xl font-semibold text-sm transition-all duration-200 text-dz-text-muted dark:text-lb-text-muted hover:bg-gray-100 dark:hover:bg-lb-card-hover min-h-[44px]">
+                        <i class="fa-solid fa-users-viewfinder w-5 text-center"></i>
+                        <span>Leads & Analytics</span>
+                    </button>
+                </div>
+
+                <!-- NAVIGATION GROUP: GENERAL -->
+                <div class="space-y-1">
+                    <p class="nav-group-label px-3 text-[10px] font-bold tracking-wider text-dz-text-muted dark:text-lb-text-muted uppercase mb-2">General</p>
+                    
+                    <button onclick="switchTab('logs')" id="nav-logs" class="nav-btn nav-item w-full flex items-center gap-3 px-3.5 py-3 rounded-2xl font-semibold text-sm transition-all duration-200 text-dz-text-muted dark:text-lb-text-muted hover:bg-gray-100 dark:hover:bg-lb-card-hover min-h-[44px]">
+                        <i class="fa-solid fa-list-check w-5 text-center"></i>
+                        <span>Activity Logs</span>
+                        <span id="log-count-badge" class="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-lb-lime font-bold">0</span>
+                    </button>
+
+                    <button onclick="switchTab('settings')" id="nav-settings" class="nav-btn nav-item w-full flex items-center gap-3 px-3.5 py-3 rounded-2xl font-semibold text-sm transition-all duration-200 text-dz-text-muted dark:text-lb-text-muted hover:bg-gray-100 dark:hover:bg-lb-card-hover min-h-[44px]">
+                        <i class="fa-solid fa-gear w-5 text-center"></i>
+                        <span>Settings</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Sidebar Footer Status -->
+            <div class="pt-4 border-t border-dz-border/50 dark:border-lb-border/50 text-xs">
+                <div class="flex items-center justify-between text-dz-text-muted dark:text-lb-text-muted">
+                    <span class="flex items-center gap-1.5"><i class="fa-solid fa-signal text-emerald-500 text-[10px] animate-pulse"></i> Sync Active</span>
+                    <span class="font-mono text-[10px]" id="sidebar-cpl-badge">$0.25/lead</span>
+                </div>
+            </div>
+
+        </aside>
+
+        <!-- MAIN CONTENT AREA -->
+        <main class="flex-1 flex flex-col h-full overflow-hidden min-w-0">
+            
+            <!-- TOP BAR -->
+            <header class="h-16 mb-3 sm:mb-4 flex items-center justify-between px-3 sm:px-6 bg-dz-card dark:bg-lb-card rounded-3xl border border-dz-border dark:border-lb-border shadow-dz-card-shadow dark:shadow-lb-card-glow flex-shrink-0">
+                
+                <div class="flex items-center gap-2 sm:gap-3 flex-1 max-w-md">
+                    <!-- Hamburger button for Mobile (<768px) -->
+                    <button id="mobile-menu-btn" onclick="toggleMobileMenu()" class="md:hidden w-11 h-11 rounded-2xl bg-dz-bg dark:bg-lb-bg border border-dz-border dark:border-lb-border flex items-center justify-center text-dz-text dark:text-white hover:scale-105 transition min-h-[44px] min-w-[44px]" aria-label="Open Navigation Menu">
+                        <i class="fa-solid fa-bars text-sm"></i>
+                    </button>
+
+                    <!-- Search Box -->
+                    <div class="relative flex-1">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-xs text-dz-text-muted dark:text-lb-text-muted"></i>
+                        <input type="text" id="global-search-input" oninput="handleGlobalSearch(this.value)" placeholder="Search garments, stores, leads..." class="w-full pl-9 pr-8 py-2.5 rounded-2xl bg-dz-bg dark:bg-lb-bg border border-transparent dark:border-lb-border text-xs focus:outline-none focus:border-dz-forest dark:focus:border-lb-lime text-dz-text dark:text-gray-200 transition min-h-[44px]">
+                        <span class="hidden sm:inline-block absolute right-3 top-1/2 -translate-y-1/2 text-[10px] px-1.5 py-0.5 rounded bg-gray-200 dark:bg-lb-card text-dz-text-muted dark:text-lb-text-muted font-mono">⌘F</span>
+                    </div>
+                </div>
+
+                <!-- Right Actions & User Profile -->
+                <div class="flex items-center gap-2 sm:gap-3 pl-2">
+                    
+                    <!-- Quick Add Garment CTA -->
+                    <button onclick="openGarmentModal()" class="hidden sm:flex items-center gap-2 py-2.5 px-3.5 rounded-2xl bg-dz-forest dark:bg-lb-lime text-white dark:text-black font-bold text-xs shadow-md hover:bg-dz-forest-hover dark:hover:bg-lb-lime-hover transition min-h-[44px]">
+                        <i class="fa-solid fa-plus"></i>
+                        <span>Add Garment</span>
+                    </button>
+
+                    <!-- Theme Toggle Switch -->
+                    <button id="theme-toggle-btn" onclick="toggleTheme()" class="w-11 h-11 rounded-2xl bg-dz-bg dark:bg-lb-bg border border-dz-border dark:border-lb-border flex items-center justify-center text-dz-text dark:text-lb-lime hover:scale-105 transition shadow-sm min-h-[44px] min-w-[44px]" title="Toggle Light/Dark Theme" aria-label="Toggle Theme">
+                        <i class="fa-solid fa-moon dark:hidden"></i>
+                        <i class="fa-solid fa-sun hidden dark:block text-lb-lime"></i>
+                    </button>
+
+                    <!-- Notifications -->
+                    <button class="relative w-11 h-11 rounded-2xl bg-dz-bg dark:bg-lb-bg border border-dz-border dark:border-lb-border flex items-center justify-center text-dz-text-muted dark:text-lb-text-muted hover:text-dz-forest dark:hover:text-lb-lime transition min-h-[44px] min-w-[44px]" title="Notifications" aria-label="Notifications">
+                        <i class="fa-regular fa-bell"></i>
+                        <span class="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-emerald-500 dark:bg-lb-lime"></span>
+                    </button>
+
+                    <div class="hidden sm:block h-6 w-px bg-dz-border dark:border-lb-border mx-1"></div>
+
+                    <!-- User Profile Badge -->
+                    <div class="flex items-center gap-2 sm:gap-3 pl-1">
+                        <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150" alt="Admin" class="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl object-cover ring-2 ring-dz-forest dark:ring-lb-lime">
+                        <div class="hidden lg:block text-left">
+                            <p class="text-xs font-bold leading-tight text-dz-text dark:text-gray-100">Labis Admin</p>
+                            <p class="text-[10px] text-dz-text-muted dark:text-lb-text-muted font-medium">admin@labis.so</p>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- SCROLLABLE TAB CONTAINER -->
+            <div class="flex-1 overflow-y-auto pr-1 pb-4 min-w-0">
+                
+                <!-- ==================== TAB 1: DASHBOARD ==================== -->
+                <div id="tab-dashboard" class="tab-content active space-y-4 sm:space-y-5">
+                    
+                    <!-- Top Metrics Grid (Responsive: 1 col on mobile, 2 col on tablet, 5 col on desktop) -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
+                        
+                        <!-- Metric 1: Stores -->
+                        <div class="p-5 rounded-3xl bg-dz-card dark:bg-lb-card border border-dz-border dark:border-lb-border shadow-dz-card-shadow dark:shadow-lb-card-glow">
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="text-xs font-semibold text-dz-text-muted dark:text-lb-text-muted">Total Stores</span>
+                                <div class="w-8 h-8 rounded-xl bg-dz-forest-light dark:bg-lb-lime-muted flex items-center justify-center text-dz-forest dark:text-lb-lime text-xs">
+                                    <i class="fa-solid fa-store"></i>
+                                </div>
+                            </div>
+                            <div class="flex items-baseline justify-between">
+                                <h3 id="stat-total-stores" class="text-2xl font-extrabold tracking-tight text-dz-text dark:text-white">0</h3>
+                                <span class="text-[11px] font-bold text-emerald-600 dark:text-lb-lime bg-emerald-50 dark:bg-lb-lime-muted px-2 py-0.5 rounded-full flex items-center gap-1">
+                                    <i class="fa-solid fa-arrow-up text-[9px]"></i> Active
+                                </span>
+                            </div>
+                            <p class="text-[11px] text-dz-text-muted dark:text-lb-text-muted mt-2">Active retail outlets</p>
+                        </div>
+
+                        <!-- Metric 2: Garments -->
+                        <div class="p-5 rounded-3xl bg-dz-card dark:bg-lb-card border border-dz-border dark:border-lb-border shadow-dz-card-shadow dark:shadow-lb-card-glow">
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="text-xs font-semibold text-dz-text-muted dark:text-lb-text-muted">Active Garments</span>
+                                <div class="w-8 h-8 rounded-xl bg-dz-forest-light dark:bg-lb-lime-muted flex items-center justify-center text-dz-forest dark:text-lb-lime text-xs">
+                                    <i class="fa-solid fa-shirt"></i>
+                                </div>
+                            </div>
+                            <div class="flex items-baseline justify-between">
+                                <h3 id="stat-active-garments" class="text-2xl font-extrabold text-dz-text dark:text-white">0</h3>
+                                <span class="text-[11px] font-bold text-emerald-600 dark:text-lb-lime bg-emerald-50 dark:bg-lb-lime-muted px-2 py-0.5 rounded-full">
+                                    In Catalog
+                                </span>
+                            </div>
+                            <p class="text-[11px] text-dz-text-muted dark:text-lb-text-muted mt-2">Available for AR try-on</p>
+                        </div>
+
+                        <!-- Metric 3: Try-ons (Dynamic Synced Metric 1:1 with Leads) -->
+                        <div class="p-5 rounded-3xl bg-dz-card dark:bg-lb-card border border-dz-border dark:border-lb-border shadow-dz-card-shadow dark:shadow-lb-card-glow">
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="text-xs font-semibold text-dz-text-muted dark:text-lb-text-muted">Try-on Sessions</span>
+                                <div class="w-8 h-8 rounded-xl bg-dz-forest-light dark:bg-lb-lime-muted flex items-center justify-center text-dz-forest dark:text-lb-lime text-xs">
+                                    <i class="fa-solid fa-vr-cardboard"></i>
+                                </div>
+                            </div>
+                            <div class="flex items-baseline justify-between">
+                                <h3 id="stat-tryons" class="text-2xl font-extrabold text-dz-text dark:text-white">0</h3>
+                                <span id="stat-tryons-badge" class="text-[11px] font-bold text-emerald-600 dark:text-lb-lime bg-emerald-50 dark:bg-lb-lime-muted px-2 py-0.5 rounded-full flex items-center gap-1">
+                                    <i class="fa-solid fa-link text-[9px]"></i> 1:1 Lead Sync
+                                </span>
+                            </div>
+                            <p class="text-[11px] text-dz-text-muted dark:text-lb-text-muted mt-2">1 try-on = 1 captured customer lead</p>
+                        </div>
+
+                        <!-- Metric 4: Billable Leads -->
+                        <div class="p-5 rounded-3xl bg-dz-card dark:bg-lb-card border border-dz-border dark:border-lb-border shadow-dz-card-shadow dark:shadow-lb-card-glow">
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="text-xs font-semibold text-dz-text-muted dark:text-lb-text-muted">Billable Leads</span>
+                                <div class="w-8 h-8 rounded-xl bg-dz-forest-light dark:bg-lb-lime-muted flex items-center justify-center text-dz-forest dark:text-lb-lime text-xs">
+                                    <i class="fa-solid fa-address-book"></i>
+                                </div>
+                            </div>
+                            <div class="flex items-baseline justify-between">
+                                <h3 id="stat-total-leads" class="text-2xl font-extrabold text-dz-text dark:text-white">0</h3>
+                                <span id="stat-unit-rate-badge" class="text-[11px] font-bold text-emerald-600 dark:text-lb-lime bg-emerald-50 dark:bg-lb-lime-muted px-2 py-0.5 rounded-full">
+                                    $0.25 / lead
+                                </span>
+                            </div>
+                            <p class="text-[11px] text-dz-text-muted dark:text-lb-text-muted mt-2">Customer contacts</p>
+                        </div>
+
+                        <!-- Metric 5: Lead Revenue / Dynamic Calculation Engine (Specification 7) -->
+                        <div class="p-5 rounded-3xl bg-dz-forest text-white dark:bg-lb-card dark:text-gray-100 dark:border dark:border-lb-lime/30 relative overflow-hidden shadow-dz-card-shadow dark:shadow-lb-card-glow glow-bg-lime">
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="text-xs font-semibold opacity-90 dark:text-lb-text-muted">Lead Revenue</span>
+                                <div class="w-8 h-8 rounded-xl bg-white/10 dark:bg-lb-lime/20 flex items-center justify-center text-white dark:text-lb-lime text-xs">
+                                    <i class="fa-solid fa-receipt"></i>
+                                </div>
+                            </div>
+                            <div class="flex items-baseline justify-between">
+                                <h3 id="lead-revenue-amount" class="text-2xl font-extrabold tracking-tight">$0.00</h3>
+                                <span class="text-[11px] font-bold text-emerald-300 dark:text-lb-lime bg-white/10 dark:bg-lb-lime/10 px-2 py-0.5 rounded-full flex items-center gap-1">
+                                    Live
+                                </span>
+                            </div>
+                            <p id="lead-revenue-subtext" class="text-[11px] opacity-75 mt-2">Billed at $0.25/lead</p>
+                        </div>
+                    </div>
+
+                    <!-- Main Chart Row & Side Widgets -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-5">
+                        
+                        <!-- Main Analytics Chart -->
+                        <div class="lg:col-span-2 bg-dz-card dark:bg-lb-card p-5 sm:p-6 rounded-3xl border border-dz-border dark:border-lb-border shadow-dz-card-shadow dark:shadow-lb-card-glow flex flex-col justify-between relative overflow-hidden">
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+                                <div>
+                                    <h3 class="text-base font-bold text-dz-text dark:text-white">Virtual Try-on & Traffic Analytics</h3>
+                                    <p class="text-xs text-dz-text-muted dark:text-lb-text-muted">Real-time shopper engagement dynamically synced from lead events</p>
+                                </div>
+                                <select id="chart-timeframe-select" onchange="initChart()" class="text-xs font-semibold bg-dz-bg dark:bg-lb-bg border border-dz-border dark:border-lb-border rounded-xl px-3 py-2 focus:outline-none text-dz-text dark:text-gray-200 min-h-[44px] sm:min-h-0">
+                                    <option value="7">Last 7 Days</option>
+                                    <option value="30">Last 30 Days</option>
+                                    <option value="all">All Time</option>
+                                </select>
+                            </div>
+
+                            <div class="h-64 w-full relative">
+                                <canvas id="dashboardChart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Side Widget: Store Performance & Time Tracker -->
+                        <div class="space-y-4 sm:space-y-5 flex flex-col justify-between">
+                            
+                            <!-- Recent Top Garment Card -->
+                            <div class="bg-dz-card dark:bg-lb-card p-5 rounded-3xl border border-dz-border dark:border-lb-border shadow-dz-card-shadow dark:shadow-lb-card-glow">
+                                <div class="flex items-center justify-between mb-3">
+                                    <h4 class="text-xs font-bold uppercase tracking-wider text-dz-text-muted dark:text-lb-text-muted">Top Performing Garment</h4>
+                                    <span class="text-[10px] bg-emerald-100 dark:bg-lb-lime-muted text-dz-forest dark:text-lb-lime px-2 py-0.5 rounded-full font-bold">Trending</span>
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <img id="top-garment-img" src="https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&q=80&w=200" class="w-14 h-14 rounded-2xl object-cover border border-dz-border dark:border-lb-border flex-shrink-0" alt="Top Garment">
+                                    <div class="min-w-0">
+                                        <h5 id="top-garment-title" class="font-bold text-sm text-dz-text dark:text-white truncate">Somali Dirac Velvet Edition</h5>
+                                        <p id="top-garment-meta" class="text-xs text-dz-text-muted dark:text-lb-text-muted truncate">Top requested garment in catalog</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Styled Dark Timer / Live Sessions Block -->
+                            <div class="dz-dark-widget dark:bg-lb-card dark:border dark:border-lb-border p-5 rounded-3xl shadow-lg relative overflow-hidden flex flex-col justify-between h-44">
+                                <div class="flex justify-between items-center z-10">
+                                    <span class="text-xs font-bold text-emerald-300 dark:text-lb-lime tracking-wide uppercase">Real-time Store Monitor</span>
+                                    <span class="flex h-2.5 w-2.5 relative">
+                                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                        <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                                    </span>
+                                </div>
+                                <div class="z-10 my-1">
+                                    <div id="live-session-timer" class="text-3xl font-extrabold font-mono tracking-tight text-white dark:text-lb-lime">08 : 42 : 19</div>
+                                    <p class="text-xs text-gray-300 dark:text-lb-text-muted mt-1">Real-time active store monitoring</p>
+                                </div>
+                                <div class="flex items-center justify-between text-xs z-10 border-t border-white/10 pt-2">
+                                    <span class="text-gray-300">Conversion Rate: <strong class="text-white" id="live-conversion-rate">18.4%</strong></span>
+                                    <button onclick="switchTab('leads')" class="text-emerald-300 dark:text-lb-lime font-bold hover:underline">View Leads →</button>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- Bottom Quick Table Preview: Recent Customer Leads -->
+                    <div class="bg-dz-card dark:bg-lb-card p-5 sm:p-6 rounded-3xl border border-dz-border dark:border-lb-border shadow-dz-card-shadow dark:shadow-lb-card-glow">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-sm font-bold text-dz-text dark:text-white">Recent Customer Leads (Try-on Scans)</h3>
+                            <button onclick="switchTab('leads')" class="text-xs font-bold text-dz-forest dark:text-lb-lime hover:underline">View All Leads →</button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs whitespace-nowrap">
+                                <thead>
+                                    <tr class="border-b border-dz-border dark:border-lb-border text-dz-text-muted dark:text-lb-text-muted">
+                                        <th class="pb-3 font-semibold">Customer Name</th>
+                                        <th class="pb-3 font-semibold">WhatsApp / Phone</th>
+                                        <th class="pb-3 font-semibold">Garment</th>
+                                        <th class="pb-3 font-semibold">Visited Store</th>
+                                        <th class="pb-3 font-semibold">Date & Time</th>
+                                        <th class="pb-3 font-semibold text-right">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recent-leads-tbody" class="divide-y divide-dz-border/50 dark:divide-lb-border/50">
+                                    <!-- Rendered dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Revenue & Invoice Calculation Breakdown (Specification 4 & 7) -->
+                    <div class="bg-dz-card dark:bg-lb-card p-5 sm:p-6 rounded-3xl border border-dz-border dark:border-lb-border shadow-dz-card-shadow dark:shadow-lb-card-glow space-y-4">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xs font-bold uppercase tracking-wider text-dz-forest dark:text-lb-lime bg-dz-forest-light dark:bg-lb-lime-muted px-2.5 py-0.5 rounded-full"><i class="fa-solid fa-file-invoice-dollar mr-1"></i> Billing Engine</span>
+                                    <span id="billing-engine-rate-label" class="text-[11px] text-dz-text-muted dark:text-lb-text-muted">Auto-computed at $0.25/lead</span>
+                                </div>
+                                <h3 class="text-base font-extrabold text-dz-text dark:text-white mt-1">Store Invoices & Revenue Breakdown</h3>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-3">
+                                <button onclick="downloadMasterLeadReport()" class="py-2 px-3.5 rounded-2xl bg-dz-bg dark:bg-lb-bg border border-dz-border dark:border-lb-border text-dz-text dark:text-gray-200 font-bold text-xs hover:border-dz-forest dark:hover:border-lb-lime transition flex items-center gap-2 min-h-[44px] sm:min-h-0">
+                                    <i class="fa-solid fa-file-invoice text-dz-forest dark:text-lb-lime"></i>
+                                    <span>Download Master Lead Report</span>
+                                </button>
+                                <div class="text-right pl-2 border-l border-dz-border/60 dark:border-lb-border/60">
+                                    <p class="text-[11px] text-dz-text-muted dark:text-lb-text-muted font-medium">Platform Gross Revenue</p>
+                                    <p id="invoice-gross-total" class="text-lg font-black text-dz-forest dark:text-lb-lime">$0.00</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs whitespace-nowrap">
+                                <thead>
+                                    <tr class="border-b border-dz-border dark:border-lb-border text-dz-text-muted dark:text-lb-text-muted">
+                                        <th class="pb-3 font-semibold">Store / Outlet</th>
+                                        <th class="pb-3 font-semibold">Location</th>
+                                        <th class="pb-3 font-semibold">Billable Leads</th>
+                                        <th class="pb-3 font-semibold">Unit Rate</th>
+                                        <th class="pb-3 font-semibold">Outstanding Balance</th>
+                                        <th class="pb-3 font-semibold">Status</th>
+                                        <th class="pb-3 font-semibold text-right">Invoice Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="invoices-tbody" class="divide-y divide-dz-border/50 dark:divide-lb-border/50">
+                                    <!-- Rendered dynamically with WhatsApp & Report actions -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- ==================== TAB 2: STORES & SHOPS (Specification 3) ==================== -->
+                <div id="tab-shops" class="tab-content space-y-5">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                            <h2 class="text-xl font-extrabold text-dz-text dark:text-white">Stores & Retail Outlets</h2>
+                            <p class="text-xs text-dz-text-muted dark:text-lb-text-muted">Manage LABIS physical stores, direct WhatsApp owner contacts, and AR displays</p>
+                        </div>
+                        <button onclick="openShopModal()" class="py-2.5 px-4 rounded-2xl bg-dz-forest dark:bg-lb-lime text-white dark:text-black font-bold text-xs shadow-md hover:opacity-90 transition flex items-center gap-2 self-start sm:self-auto min-h-[44px]">
+                            <i class="fa-solid fa-plus"></i>
+                            <span>Add New Store</span>
+                        </button>
+                    </div>
+
+                    <!-- Stores Grid (1 col on mobile, 2 col on tablet, 3 col on desktop) -->
+                    <div id="shops-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                        <!-- Dynamic Store Cards with WhatsApp direct contact button -->
+                    </div>
+                </div>
+
+                <!-- ==================== TAB 3: GARMENTS CATALOG (Specification 5: Store Grouping) ==================== -->
+                <div id="tab-garments" class="tab-content space-y-5">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                            <h2 class="text-xl font-extrabold text-dz-text dark:text-white">Garments Catalog (Labis Items)</h2>
+                            <p class="text-xs text-dz-text-muted dark:text-lb-text-muted">Items grouped under clear shop headers with store tags</p>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-3">
+                            <!-- Category Filter -->
+                            <select id="garment-filter-category" onchange="renderGarments()" class="text-xs font-semibold bg-dz-card dark:bg-lb-card border border-dz-border dark:border-lb-border rounded-2xl px-3 py-2.5 text-dz-text dark:text-gray-200 min-h-[44px]">
+                                <option value="ALL">All Categories</option>
+                                <option value="Dirac">Dirac</option>
+                                <option value="Guntiino">Guntiino</option>
+                                <option value="Suits">Suits & Blazers</option>
+                                <option value="Dresses">Casual Dresses</option>
+                            </select>
+                            
+                            <button onclick="openGarmentModal()" class="py-2.5 px-4 rounded-2xl bg-dz-forest dark:bg-lb-lime text-white dark:text-black font-bold text-xs shadow-md hover:opacity-90 transition flex items-center gap-2 min-h-[44px]">
+                                <i class="fa-solid fa-plus"></i>
+                                <span>Add Garment</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Garments View: Grouped by Shop Sections with badge-store on each card -->
+                    <div id="garments-grid" class="space-y-6">
+                        <!-- Dynamic Shop Sections -->
+                    </div>
+                </div>
+
+                <!-- ==================== TAB 4: LEADS & ANALYTICS (Specification 6: Shop Grouping & CSV) ==================== -->
+                <div id="tab-leads" class="tab-content space-y-5">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                            <h2 class="text-xl font-extrabold text-dz-text dark:text-white">Captured Customer Leads</h2>
+                            <p class="text-xs text-dz-text-muted dark:text-lb-text-muted">Shop-specific grouped customer leads with dedicated CSV and master exports</p>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <button onclick="exportLeadsCSV()" class="py-2.5 px-4 rounded-2xl bg-dz-forest dark:bg-lb-lime text-white dark:text-black font-bold text-xs shadow-md hover:opacity-90 transition flex items-center gap-2 min-h-[44px]" title="Export Name and WhatsApp numbers for NumberChecker.ai">
+                                <i class="fa-solid fa-file-csv"></i>
+                                <span>Master Export (Name & WhatsApp)</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Shop-Specific Grouped Leads Sections -->
+                    <div id="leads-grouped-container" class="space-y-6">
+                        <!-- Dynamic Shop Sections with dedicated Export CSV per shop -->
+                    </div>
+                </div>
+
+                <!-- ==================== TAB 5: SYSTEM ACTIVITY LOGS ==================== -->
+                <div id="tab-logs" class="tab-content space-y-5">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                            <h2 class="text-xl font-extrabold text-dz-text dark:text-white">System Activity & Event Logs</h2>
+                            <p class="text-xs text-dz-text-muted dark:text-lb-text-muted">Real-time telemetry, API webhooks, Supabase synchronization, and lead capture events</p>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <!-- Filter by event type -->
+                            <select id="log-filter-type" onchange="renderLogs()" class="text-xs font-semibold bg-dz-card dark:bg-lb-card border border-dz-border dark:border-lb-border rounded-2xl px-3 py-2.5 text-dz-text dark:text-gray-200 min-h-[44px]">
+                                <option value="ALL">All Event Types</option>
+                                <option value="LEAD">Lead Events</option>
+                                <option value="API">API & Webhooks</option>
+                                <option value="SYSTEM">System Events</option>
+                                <option value="ERROR">Error Events</option>
+                            </select>
+                            
+                            <button onclick="clearLogs()" class="py-2.5 px-3.5 rounded-2xl bg-dz-card dark:bg-lb-card border border-dz-border dark:border-lb-border text-xs font-bold text-red-500 hover:bg-red-500/10 transition flex items-center gap-1.5 min-h-[44px]">
+                                <i class="fa-solid fa-trash-can"></i>
+                                <span>Clear Logs</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="bg-dz-card dark:bg-lb-card p-5 sm:p-6 rounded-3xl border border-dz-border dark:border-lb-border shadow-dz-card-shadow dark:shadow-lb-card-glow space-y-4">
+                        <div class="flex items-center justify-between border-b border-dz-border/60 dark:border-lb-border/60 pb-3 text-xs font-bold text-dz-text-muted dark:text-lb-text-muted">
+                            <span>Live Stream (<span id="log-count-indicator">0</span> events)</span>
+                            <span class="flex items-center gap-1 text-emerald-500 dark:text-lb-lime font-mono text-[11px]"><i class="fa-solid fa-circle text-[8px] animate-pulse"></i> LIVE MONITORING ACTIVE</span>
+                        </div>
+
+                        <div id="logs-container" class="space-y-2.5 max-h-[500px] overflow-y-auto pr-2 font-mono text-xs">
+                            <!-- Rendered dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ==================== TAB 6: SETTINGS (Specification 7) ==================== -->
+                <div id="tab-settings" class="tab-content space-y-5">
+                    <div>
+                        <h2 class="text-xl font-extrabold text-dz-text dark:text-white">LABIS Platform Settings & Integrations</h2>
+                        <p class="text-xs text-dz-text-muted dark:text-lb-text-muted">Configure cloud databases, messaging APIs, webhooks, and billing parameters</p>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                        
+                        <!-- Card 1: API & Cloud Database Configuration -->
+                        <div class="bg-dz-card dark:bg-lb-card p-5 sm:p-6 rounded-3xl border border-dz-border dark:border-lb-border shadow-dz-card-shadow dark:shadow-lb-card-glow space-y-4">
+                            <div class="flex items-center gap-2.5 pb-2 border-b border-dz-border dark:border-lb-border">
+                                <div class="w-8 h-8 rounded-xl bg-emerald-500/10 dark:bg-lb-lime-muted flex items-center justify-center text-dz-forest dark:text-lb-lime">
+                                    <i class="fa-solid fa-cloud"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-sm font-bold text-dz-text dark:text-white">API & Cloud Integrations</h3>
+                                    <p class="text-[11px] text-dz-text-muted dark:text-lb-text-muted">Supabase & NumberChecker AI / WhatChimp credentials</p>
+                                </div>
+                            </div>
+
+                            <form id="api-settings-form" onsubmit="saveApiSettings(event)" class="space-y-3.5">
+                                <div class="space-y-1">
+                                    <label class="text-xs font-bold text-dz-text dark:text-gray-200 flex items-center justify-between">
+                                        <span>Supabase Project URL</span>
+                                        <span class="text-[10px] text-emerald-600 dark:text-lb-lime font-semibold">https://*.supabase.co</span>
+                                    </label>
+                                    <input type="url" id="setting-supabase-url" placeholder="https://your-project.supabase.co" class="w-full p-2.5 rounded-2xl bg-dz-bg dark:bg-lb-bg border border-dz-border dark:border-lb-border text-xs text-dz-text dark:text-gray-200 focus:outline-none focus:border-dz-forest dark:focus:border-lb-lime font-mono min-h-[44px]">
+                                </div>
+
+                                <div class="space-y-1">
+                                    <label class="text-xs font-bold text-dz-text dark:text-gray-200">Supabase Anon Key (Public API Key)</label>
+                                    <input type="password" id="setting-supabase-anon-key" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." class="w-full p-2.5 rounded-2xl bg-dz-bg dark:bg-lb-bg border border-dz-border dark:border-lb-border text-xs text-dz-text dark:text-gray-200 focus:outline-none focus:border-dz-forest dark:focus:border-lb-lime font-mono min-h-[44px]">
+                                </div>
+
+                                <div class="space-y-1">
+                                    <label class="text-xs font-bold text-dz-text dark:text-gray-200 flex items-center justify-between">
+                                        <span>NumberChecker AI / WhatChimp API Key</span>
+                                        <span class="text-[10px] text-dz-text-muted dark:text-lb-text-muted">WhatsApp Verification</span>
+                                    </label>
+                                    <input type="password" id="setting-whatchimp-key" placeholder="wc_live_xxxxxxxxxxxxxxxxxxxxxxxx" class="w-full p-2.5 rounded-2xl bg-dz-bg dark:bg-lb-bg border border-dz-border dark:border-lb-border text-xs text-dz-text dark:text-gray-200 focus:outline-none focus:border-dz-forest dark:focus:border-lb-lime font-mono min-h-[44px]">
+                                </div>
+
+                                <div class="space-y-1">
+                                    <label class="text-xs font-bold text-dz-text dark:text-gray-200 flex items-center justify-between">
+                                        <span>Outbound Webhook URL (Leads Sync)</span>
+                                        <span class="text-[10px] text-dz-text-muted dark:text-lb-text-muted">POST upon AR Lead</span>
+                                    </label>
+                                    <input type="url" id="setting-webhook-url" placeholder="https://api.yourcrm.com/webhooks/labis-leads" class="w-full p-2.5 rounded-2xl bg-dz-bg dark:bg-lb-bg border border-dz-border dark:border-lb-border text-xs text-dz-text dark:text-gray-200 focus:outline-none focus:border-dz-forest dark:focus:border-lb-lime font-mono min-h-[44px]">
+                                </div>
+
+                                <div class="pt-2 flex flex-wrap items-center justify-between gap-2">
+                                    <button type="button" onclick="testConnection()" class="py-2.5 px-3.5 rounded-xl border border-dz-border dark:border-lb-border text-dz-text dark:text-gray-200 font-bold text-xs hover:bg-gray-100 dark:hover:bg-lb-card-hover transition flex items-center gap-1.5 min-h-[44px]">
+                                        <i class="fa-solid fa-plug"></i> Test Connection
+                                    </button>
+                                    <button type="submit" class="py-2.5 px-4 rounded-xl bg-dz-forest dark:bg-lb-lime text-white dark:text-black font-bold text-xs shadow-md hover:opacity-90 transition min-h-[44px]">
+                                        <i class="fa-solid fa-floppy-disk mr-1"></i> Save API Settings
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Card 2: General & Billing Rules (Specification 7: Dynamic Calculation Engine) -->
+                        <div class="space-y-5">
+                            <div class="bg-dz-card dark:bg-lb-card p-5 sm:p-6 rounded-3xl border border-dz-border dark:border-lb-border shadow-dz-card-shadow dark:shadow-lb-card-glow space-y-4">
+                                <div class="flex items-center gap-2.5 pb-2 border-b border-dz-border dark:border-lb-border">
+                                    <div class="w-8 h-8 rounded-xl bg-emerald-500/10 dark:bg-lb-lime-muted flex items-center justify-center text-dz-forest dark:text-lb-lime">
+                                        <i class="fa-solid fa-coins"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-sm font-bold text-dz-text dark:text-white">Billing & Calculation Rules</h3>
+                                        <p class="text-[11px] text-dz-text-muted dark:text-lb-text-muted">Real-time cost-per-lead calculation engine and persistence</p>
+                                    </div>
+                                </div>
+
+                                <div class="space-y-3.5">
+                                    <div class="space-y-1">
+                                        <label class="text-xs font-bold text-dz-text dark:text-gray-200">System Name</label>
+                                        <input type="text" id="setting-system-name" value="LABIS Master Retail" class="w-full p-2.5 rounded-2xl bg-dz-bg dark:bg-lb-bg border border-dz-border dark:border-lb-border text-xs text-dz-text dark:text-gray-200 focus:outline-none focus:border-dz-forest dark:focus:border-lb-lime min-h-[44px]">
+                                    </div>
+
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        <div class="space-y-1">
+                                            <label class="text-xs font-bold text-dz-text dark:text-gray-200 flex items-center justify-between">
+                                                <span>Cost Per Lead ($)</span>
+                                                <span class="text-[10px] text-emerald-600 dark:text-lb-lime font-bold">Live Engine</span>
+                                            </label>
+                                            <input type="number" id="setting-lead-rate" step="0.01" value="0.25" class="w-full p-2.5 rounded-2xl bg-dz-bg dark:bg-lb-bg border border-dz-border dark:border-lb-border text-xs text-dz-text dark:text-gray-200 font-bold focus:outline-none focus:border-dz-forest dark:focus:border-lb-lime min-h-[44px]" oninput="handleRateLiveChange(this.value)">
+                                        </div>
+                                        <div class="space-y-1">
+                                            <label class="text-xs font-bold text-dz-text dark:text-gray-200">Default Currency</label>
+                                            <select class="w-full p-2.5 rounded-2xl bg-dz-bg dark:bg-lb-bg border border-dz-border dark:border-lb-border text-xs text-dz-text dark:text-gray-200 min-h-[44px]">
+                                                <option>USD ($)</option>
+                                                <option>SLSH (Somaliland Shilling)</option>
+                                                <option>SOS (Somali Shilling)</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="p-3 rounded-2xl bg-dz-bg dark:bg-lb-bg border border-dz-border dark:border-lb-border text-xs flex items-center justify-between">
+                                        <span class="text-dz-text-muted dark:text-lb-text-muted">Calculated Total Revenue:</span>
+                                        <strong id="preview-calculated-revenue" class="text-dz-forest dark:text-lb-lime font-mono text-sm font-black">$0.00</strong>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Reset Demo Card -->
+                            <div class="bg-dz-card dark:bg-lb-card p-5 rounded-3xl border border-dz-border dark:border-lb-border shadow-dz-card-shadow dark:shadow-lb-card-glow flex items-center justify-between">
+                                <div>
+                                    <h4 class="text-xs font-bold text-dz-text dark:text-white">Reset Demo Data</h4>
+                                    <p class="text-[11px] text-dz-text-muted dark:text-lb-text-muted">Restore initial sample stores, garments, and leads</p>
+                                </div>
+                                <button onclick="resetData()" class="py-2.5 px-3.5 rounded-xl bg-red-500/10 text-red-500 hover:bg-red-500/20 font-bold text-xs transition min-h-[44px]">
+                                    Reset Data
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- ==================== MODAL 1: QR CODE DISPLAY ==================== -->
+    <div id="qr-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-dz-card dark:bg-lb-card border border-dz-border dark:border-lb-border p-6 rounded-3xl max-w-sm w-full space-y-5 shadow-2xl text-center relative animate-in fade-in zoom-in duration-200">
+            <button onclick="closeQrModal()" class="absolute top-4 right-4 text-dz-text-muted dark:text-lb-text-muted hover:text-dz-text dark:hover:text-white w-9 h-9 rounded-xl flex items-center justify-center" aria-label="Close QR Modal">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+            
+            <div class="space-y-1">
+                <span class="text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded-full bg-dz-forest-light dark:bg-lb-lime-muted text-dz-forest dark:text-lb-lime">LABIS AR QR</span>
+                <h3 id="qr-modal-title" class="text-base font-extrabold text-dz-text dark:text-white">Store AR Scan</h3>
+                <p class="text-xs text-dz-text-muted dark:text-lb-text-muted">Point mobile camera to initiate virtual try-on session</p>
+            </div>
+
+            <!-- QR Container -->
+            <div class="p-4 bg-white rounded-2xl border border-gray-200 inline-block mx-auto shadow-inner">
+                <div id="qrcode-container" class="flex justify-center"></div>
+            </div>
+
+            <div class="p-2.5 rounded-2xl bg-dz-bg dark:bg-lb-bg border border-dz-border dark:border-lb-border text-[11px] text-dz-text-muted dark:text-lb-text-muted truncate font-mono" id="qr-url-text">
+                https://labis.so/tryon
+            </div>
+
+            <button onclick="copyQrLink()" class="w-full py-3 rounded-2xl bg-dz-forest dark:bg-lb-lime text-white dark:text-black font-bold text-xs hover:opacity-90 transition min-h-[44px]">
+                <i class="fa-solid fa-copy mr-1"></i> Copy Store Link
+            </button>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL 2: ADD/EDIT STORE (Specification 3: Owner WhatsApp) ==================== -->
+    <div id="shop-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-dz-card dark:bg-lb-card border border-dz-border dark:border-lb-border p-6 rounded-3xl max-w-md w-full space-y-4 shadow-2xl relative">
+            <button onclick="closeShopModal()" class="absolute top-4 right-4 text-dz-text-muted dark:text-lb-text-muted hover:text-dz-text dark:hover:text-white w-9 h-9 rounded-xl flex items-center justify-center" aria-label="Close Store Modal">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+            <h3 class="text-base font-extrabold text-dz-text dark:text-white" id="shop-modal-heading">Add New Retail Store</h3>
+            
+            <form id="shop-form" onsubmit="saveShop(event)" class="space-y-3.5">
+                <input type="hidden" id="shop-id">
+                <div>
+                    <label class="text-xs font-bold text-dz-text dark:text-gray-200 mb-1 block">Store Name *</label>
+                    <input type="text" id="shop-name" required placeholder="e.g. LABIS Hargeisa Flagship" class="w-full p-2.5 rounded-2xl bg-dz-bg dark:bg-lb-bg border border-dz-border dark:border-lb-border text-xs text-dz-text dark:text-gray-200 focus:outline-none focus:border-dz-forest dark:focus:border-lb-lime min-h-[44px]">
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-dz-text dark:text-gray-200 mb-1 block">City / Location *</label>
+                    <input type="text" id="shop-city" required placeholder="e.g. Hargeisa, Somaliland" class="w-full p-2.5 rounded-2xl bg-dz-bg dark:bg-lb-bg border border-dz-border dark:border-lb-border text-xs text-dz-text dark:text-gray-200 focus:outline-none focus:border-dz-forest dark:focus:border-lb-lime min-h-[44px]">
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-dz-text dark:text-gray-200 mb-1 block">Manager Name</label>
+                    <input type="text" id="shop-manager" placeholder="e.g. Amina Mohamed" class="w-full p-2.5 rounded-2xl bg-dz-bg dark:bg-lb-bg border border-dz-border dark:border-lb-border text-xs text-dz-text dark:text-gray-200 focus:outline-none focus:border-dz-forest dark:focus:border-lb-lime min-h-[44px]">
+                </div>
+                <!-- Mandatory Owner WhatsApp Number Field (Specification 3) -->
+                <div>
+                    <label class="text-xs font-bold text-dz-text dark:text-gray-200 mb-1 block flex items-center justify-between">
+                        <span>Owner WhatsApp Number *</span>
+                        <span class="text-[10px] text-emerald-600 dark:text-lb-lime font-semibold"><i class="fa-brands fa-whatsapp mr-1"></i>Direct Contact</span>
+                    </label>
+                    <input type="tel" id="shop-whatsapp" required placeholder="e.g. +252 63 4410293" class="w-full p-2.5 rounded-2xl bg-dz-bg dark:bg-lb-bg border border-dz-border dark:border-lb-border text-xs text-dz-text dark:text-gray-200 focus:outline-none focus:border-dz-forest dark:focus:border-lb-lime min-h-[44px]">
+                    <span class="text-[10px] text-dz-text-muted dark:text-lb-text-muted mt-1 block">Include country code for one-click WhatsApp dispatch</span>
+                </div>
+                <div class="pt-2 flex justify-end gap-2">
+                    <button type="button" onclick="closeShopModal()" class="py-2.5 px-4 rounded-2xl border border-dz-border dark:border-lb-border text-xs font-bold text-dz-text-muted dark:text-lb-text-muted min-h-[44px]">Cancel</button>
+                    <button type="submit" class="py-2.5 px-5 rounded-2xl bg-dz-forest dark:bg-lb-lime text-white dark:text-black font-bold text-xs shadow-md min-h-[44px]">Save Store</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL 3: ADD/EDIT GARMENT ==================== -->
+    <div id="garment-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-dz-card dark:bg-lb-card border border-dz-border dark:border-lb-border p-6 rounded-3xl max-w-md w-full space-y-4 shadow-2xl relative">
+            <button onclick="closeGarmentModal()" class="absolute top-4 right-4 text-dz-text-muted dark:text-lb-text-muted hover:text-dz-text dark:hover:text-white w-9 h-9 rounded-xl flex items-center justify-center" aria-label="Close Garment Modal">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+            <h3 class="text-base font-extrabold text-dz-text dark:text-white" id="garment-modal-heading">Add New Garment</h3>
+            
+            <form id="garment-form" onsubmit="saveGarment(event)" class="space-y-3">
+                <input type="hidden" id="garment-id">
+                <div>
+                    <label class="text-xs font-bold text-dz-text dark:text-gray-200 mb-1 block">Garment Name</label>
+                    <input type="text" id="garment-title" required placeholder="e.g. Dirac Silk Velvet Gold" class="w-full p-2.5 rounded-2xl bg-dz-bg dark:bg-lb-bg border border-dz-border dark:border-lb-border text-xs text-dz-text dark:text-gray-200 focus:outline-none focus:border-dz-forest dark:focus:border-lb-lime min-h-[44px]">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-xs font-bold text-dz-text dark:text-gray-200 mb-1 block">Category</label>
+                        <input type="text" id="garment-category" required placeholder="e.g. Dirac, Suits, Casual, Abaya..." class="w-full p-2.5 rounded-2xl bg-dz-bg dark:bg-lb-bg border border-dz-border dark:border-lb-border text-xs text-dz-text dark:text-gray-200 focus:outline-none focus:border-dz-forest dark:focus:border-lb-lime min-h-[44px]">
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-dz-text dark:text-gray-200 mb-1 block">Price ($)</label>
+                        <input type="number" id="garment-price" required placeholder="120" class="w-full p-2.5 rounded-2xl bg-dz-bg dark:bg-lb-bg border border-dz-border dark:border-lb-border text-xs text-dz-text dark:text-gray-200 focus:outline-none focus:border-dz-forest dark:focus:border-lb-lime min-h-[44px]">
+                    </div>
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-dz-text dark:text-gray-200 mb-1 block">Assigned Store</label>
+                    <select id="garment-shop" class="w-full p-2.5 rounded-2xl bg-dz-bg dark:bg-lb-bg border border-dz-border dark:border-lb-border text-xs text-dz-text dark:text-gray-200 min-h-[44px]">
+                        <!-- Populated dynamically -->
+                    </select>
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-dz-text dark:text-gray-200 mb-1 block">Image Source (Upload to Supabase Storage or Paste URL)</label>
+                    <div class="space-y-2">
+                        <div class="flex items-center gap-2">
+                            <input type="file" id="garment-file-upload" accept="image/*" class="w-full text-xs text-dz-text dark:text-gray-300 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-dz-forest file:text-white dark:file:bg-lb-lime dark:file:text-black hover:file:opacity-90 cursor-pointer min-h-[44px]">
+                        </div>
+                        <div class="relative">
+                            <input type="url" id="garment-image" placeholder="Or enter Image URL (https://... or Supabase storage link)" class="w-full p-2.5 rounded-2xl bg-dz-bg dark:bg-lb-bg border border-dz-border dark:border-lb-border text-xs text-dz-text dark:text-gray-200 focus:outline-none focus:border-dz-forest dark:focus:border-lb-lime min-h-[44px]">
+                        </div>
+                        <p class="text-[10px] text-dz-text-muted dark:text-lb-text-muted">Files upload directly to the <code>garment-images</code> Supabase public storage bucket.</p>
+                    </div>
+                </div>
+                <div class="pt-2 flex justify-end gap-2">
+                    <button type="button" onclick="closeGarmentModal()" class="py-2.5 px-4 rounded-2xl border border-dz-border dark:border-lb-border text-xs font-bold text-dz-text-muted dark:text-lb-text-muted min-h-[44px]">Cancel</button>
+                    <button type="submit" id="garment-submit-btn" class="py-2.5 px-5 rounded-2xl bg-dz-forest dark:bg-lb-lime text-white dark:text-black font-bold text-xs shadow-md min-h-[44px]">Save Garment</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Core Modular Application Logic -->
+    <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,280 @@
+/* ==========================================================================
+   LABIS Master Retail Dashboard — Core Stylesheet (style.css)
+   Aesthetic: Dual theme (Donezo Light / LittleBee Dark) + Glassmorphism
+   Responsive Breakpoints: Mobile (<768px), Tablet (768-1023px), Desktop (≥1024px)
+   ========================================================================== */
+
+:root {
+    --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    
+    /* LittleBee Dark Palette */
+    --lb-bg: #0a100d;
+    --lb-card: #121c17;
+    --lb-card-hover: #18251f;
+    --lb-border: rgba(255, 255, 255, 0.08);
+    --lb-lime: #b0f347;
+    --lb-lime-hover: #9de234;
+    --lb-lime-muted: rgba(176, 243, 71, 0.15);
+    --lb-text-muted: #82958b;
+
+    /* Donezo Light Palette */
+    --dz-bg: #f3f4f6;
+    --dz-card: #ffffff;
+    --dz-border: #e5e7eb;
+    --dz-forest: #166534;
+    --dz-forest-hover: #14532d;
+    --dz-forest-light: rgba(22, 101, 52, 0.08);
+    --dz-text: #1f2937;
+    --dz-text-muted: #6b7280;
+}
+
+body {
+    font-family: var(--font-sans);
+    transition: background-color 0.3s ease, color 0.3s ease;
+    min-height: 100vh;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+.dark ::-webkit-scrollbar-thumb {
+    background: #24352c;
+    border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 9999px;
+}
+
+/* Radial glow effects for Dark Mode (LittleBee) */
+.dark .glow-bg-lime {
+    background: radial-gradient(circle at 80% 20%, rgba(176, 243, 71, 0.12) 0%, transparent 60%);
+}
+.dark .glow-card-green {
+    background: linear-gradient(145deg, #16241d 0%, #0d1511 100%);
+    border: 1px solid rgba(176, 243, 71, 0.2);
+}
+
+/* Active Navigation States */
+.dark .nav-item-active,
+.dark .nav-btn.nav-item-active {
+    background: linear-gradient(135deg, rgba(176, 243, 71, 0.2) 0%, rgba(176, 243, 71, 0.05) 100%);
+    color: #b0f347 !important;
+    border-left: 3px solid #b0f347;
+}
+
+.light .nav-item-active,
+.light .nav-btn.nav-item-active {
+    background-color: #166534;
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(22, 101, 52, 0.25);
+}
+
+/* ==========================================================================
+   1.B. Light Mode Hover & Active State Fix
+   Audit contrast ratios for .nav-item, .btn, and active link CSS states.
+   ========================================================================== */
+
+/* Light Mode Specific Hover & Active Rules (Mandated Specification) */
+body.light-theme .nav-item:hover,
+body.light-theme .nav-item.active,
+body.light-theme .nav-btn:hover,
+body.light-theme .nav-btn.active,
+body.light-theme .nav-btn.nav-item-active,
+.light .nav-item:hover,
+.light .nav-item.active,
+.light .nav-btn:hover,
+.light .nav-btn.active {
+    background-color: #e0e7ff !important; /* Soft contrast fill */
+    color: #1e1b4b !important;            /* Dark high-contrast text */
+}
+
+body.light-theme .nav-item:hover svg,
+body.light-theme .nav-item.active svg,
+body.light-theme .nav-btn:hover svg,
+body.light-theme .nav-btn.active svg,
+body.light-theme .nav-btn.nav-item-active svg,
+.light .nav-item:hover svg,
+.light .nav-item.active svg,
+.light .nav-btn:hover svg,
+.light .nav-btn.active svg {
+    fill: #1e1b4b !important;
+}
+
+body.light-theme .nav-item:hover i,
+body.light-theme .nav-item.active i,
+body.light-theme .nav-btn:hover i,
+body.light-theme .nav-btn.active i,
+body.light-theme .nav-btn.nav-item-active i,
+.light .nav-item:hover i,
+.light .nav-item.active i,
+.light .nav-btn:hover i,
+.light .nav-btn.active i {
+    color: #1e1b4b !important;
+}
+
+body.light-theme .nav-btn:hover span,
+body.light-theme .nav-btn.active span,
+.light .nav-btn:hover span,
+.light .nav-btn.active span {
+    color: #1e1b4b !important;
+}
+
+/* Light Mode General Button and Link Contrasts */
+body.light-theme .btn-secondary:hover,
+.light .btn-secondary:hover {
+    background-color: #e0e7ff;
+    color: #1e1b4b;
+}
+
+/* Smooth Tab Transitions */
+.tab-content {
+    display: none;
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity 0.25s ease, transform 0.25s ease;
+}
+.tab-content.active {
+    display: block;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Donezo style textured dark card in light mode */
+.light .dz-dark-widget {
+    background: linear-gradient(135deg, #092e1b 0%, #03170d 100%);
+    color: #ffffff;
+}
+
+/* Glassmorphism & UI Accents */
+.glass-panel {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+.dark .glass-panel {
+    background: rgba(18, 28, 23, 0.8);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Store Badge Styles (Specification 5) */
+.badge-store {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.25rem 0.65rem;
+    border-radius: 9999px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    background-color: #e0e7ff;
+    color: #1e1b4b;
+    border: 1px solid #c7d2fe;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+    transition: all 0.2s ease;
+}
+.dark .badge-store {
+    background-color: rgba(176, 243, 71, 0.15);
+    color: #b0f347;
+    border: 1px solid rgba(176, 243, 71, 0.3);
+    box-shadow: 0 0 10px rgba(176, 243, 71, 0.1);
+}
+
+/* ==========================================================================
+   1.A. Mobile Layout & Grid Breakpoints
+   Desktop (≥ 1024px): Multi-column grid (sidebar + main content).
+   Tablet (768px – 1023px): Collapsible sidebar menu; 2-column card layouts.
+   Mobile (< 768px): Single-column layout. Drawer/hamburger menu; scrollable tables.
+   Touch targets: ≥ 44px x 44px
+   ========================================================================== */
+
+/* Touch Target Compliance (≥ 44px x 44px) */
+@media (max-width: 767px) {
+    .nav-btn,
+    .btn-touch,
+    button,
+    input[type="text"],
+    input[type="tel"],
+    input[type="url"],
+    input[type="password"],
+    input[type="number"],
+    select {
+        min-height: 44px;
+    }
+
+    button.icon-btn,
+    .touch-target {
+        min-width: 44px;
+        min-height: 44px;
+    }
+}
+
+/* Mobile Drawer Sidebar Navigation */
+@media (max-width: 767px) {
+    #sidebar {
+        position: fixed !important;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 50;
+        height: 100vh;
+        width: 280px;
+        max-width: 85vw;
+        border-radius: 0 24px 24px 0;
+        transform: translateX(-105%);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+    }
+
+    #sidebar.drawer-open {
+        transform: translateX(0);
+    }
+
+    #sidebar-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(4px);
+        z-index: 45;
+        transition: opacity 0.3s ease;
+    }
+
+    #sidebar-overlay.active {
+        display: block;
+    }
+}
+
+/* Tablet Layout (768px – 1023px) */
+@media (min-width: 768px) and (max-width: 1023px) {
+    #sidebar.tablet-collapsed {
+        width: 80px;
+        padding: 1rem 0.5rem;
+    }
+
+    #sidebar.tablet-collapsed .nav-btn span,
+    #sidebar.tablet-collapsed .logo-text,
+    #sidebar.tablet-collapsed .nav-group-label,
+    #sidebar.tablet-collapsed #garment-badge-count,
+    #sidebar.tablet-collapsed #log-count-badge {
+        display: none !important;
+    }
+
+    #sidebar.tablet-collapsed .nav-btn {
+        justify-content: center;
+        padding: 0.75rem 0;
+    }
+}
+
+/* Mobile Scrollable Tables Guarantee */
+.table-responsive,
+.overflow-x-auto {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
