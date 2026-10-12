@@ -1056,7 +1056,10 @@ function renderLeads() {
                 return `
                 <tr class="hover:bg-dz-bg/50 dark:hover:bg-lb-card-hover/50 transition">
                     <td class="py-2.5 font-bold text-dz-text dark:text-gray-100">${l.name}</td>
-                    <td class="py-2.5 font-mono text-dz-forest dark:text-lb-lime">${l.phone}</td>
+                    <td class="py-2.5 font-mono text-dz-forest dark:text-lb-lime">
+                        ${l.phone}
+                        ${l.whatsapp_verified ? `<span class="ml-1 inline-flex items-center text-[10px] text-emerald-500" title="WhatsApp Verified by eKYC Pro"><i class="fa-solid fa-circle-check"></i></span>` : ''}
+                    </td>
                     <td class="py-2.5 text-dz-text dark:text-gray-200 truncate max-w-[140px]">${l.garment || 'General Visit'}</td>
                     <td class="py-2.5 text-dz-text-muted dark:text-lb-text-muted">${l.shop}</td>
                     <td class="py-2.5 text-dz-text-muted dark:text-lb-text-muted">${l.date}</td>
@@ -1144,7 +1147,10 @@ function renderLeads() {
                                     return `
                                     <tr class="hover:bg-dz-bg/50 dark:hover:bg-lb-card-hover/50 transition">
                                         <td class="py-3 px-3 font-bold text-dz-text dark:text-gray-100">${l.name}</td>
-                                        <td class="py-3 px-3 font-mono text-dz-forest dark:text-lb-lime">${l.phone}</td>
+                                        <td class="py-3 px-3 font-mono text-dz-forest dark:text-lb-lime">
+                                            ${l.phone}
+                                            ${l.whatsapp_verified ? `<span class="ml-1 inline-flex items-center text-[10px] text-emerald-500" title="WhatsApp Verified by eKYC Pro"><i class="fa-solid fa-circle-check"></i></span>` : ''}
+                                        </td>
                                         <td class="py-3 px-3 text-dz-text dark:text-gray-200">${l.garment || 'General Store Visit'}</td>
                                         <td class="py-3 px-3 text-dz-text-muted dark:text-lb-text-muted">${l.date}</td>
                                         <td class="py-3 px-3 text-right">
@@ -1600,6 +1606,8 @@ async function syncSupabaseData() {
                         shop: matchedShop ? matchedShop.name : (r.shop || 'gobstore'),
                         store_id: storeId,
                         garment: r.garment || 'Store Catalog',
+                        whatsapp_verified: r.whatsapp_verified !== undefined ? r.whatsapp_verified : true,
+                        ekyc_check_id: r.ekyc_check_id || null,
                         date: r.created_at ? new Date(r.created_at).toLocaleString() : (r.captured_date || new Date().toLocaleString())
                     };
                 });
