@@ -42,11 +42,6 @@ const initialShops = [
 ];
 
 const initialGarments = [
-    { id: 'grm-1', title: 'Classic Shoe', category: 'Footwear', price: 95.00, shopId: GOBSTORE_UUID, store_id: GOBSTORE_UUID, image: `${SUPABASE_STORAGE_BASE_URL}gobsrote/classic%20sheo.jfif`, image_url: `${SUPABASE_STORAGE_BASE_URL}gobsrote/classic%20sheo.jfif`, arReady: true },
-    { id: 'grm-2', title: 'Classic Shoe II', category: 'Footwear', price: 98.00, shopId: GOBSTORE_UUID, store_id: GOBSTORE_UUID, image: `${SUPABASE_STORAGE_BASE_URL}gobsrote/classic%20sheo2.jfif`, image_url: `${SUPABASE_STORAGE_BASE_URL}gobsrote/classic%20sheo2.jfif`, arReady: true },
-    { id: 'grm-3', title: 'Oxford Shoe I', category: 'Footwear', price: 89.00, shopId: GOBSTORE_UUID, store_id: GOBSTORE_UUID, image: `${SUPABASE_STORAGE_BASE_URL}gobsrote/sheo%201.jfif`, image_url: `${SUPABASE_STORAGE_BASE_URL}gobsrote/sheo%201.jfif`, arReady: true },
-    { id: 'grm-4', title: 'Leather Shoe II', category: 'Footwear', price: 92.00, shopId: GOBSTORE_UUID, store_id: GOBSTORE_UUID, image: `${SUPABASE_STORAGE_BASE_URL}gobsrote/sheo2.jfif`, image_url: `${SUPABASE_STORAGE_BASE_URL}gobsrote/sheo2.jfif`, arReady: true },
-    { id: 'grm-5', title: 'Formal Shoe III', category: 'Footwear', price: 96.00, shopId: GOBSTORE_UUID, store_id: GOBSTORE_UUID, image: `${SUPABASE_STORAGE_BASE_URL}gobsrote/sheo3.jfif`, image_url: `${SUPABASE_STORAGE_BASE_URL}gobsrote/sheo3.jfif`, arReady: true },
     { id: 'grm-6', title: 'Tailored Shirt', category: 'Shirts', price: 55.00, shopId: GOBSTORE_UUID, store_id: GOBSTORE_UUID, image: `${SUPABASE_STORAGE_BASE_URL}gobsrote/shrit.jfif`, image_url: `${SUPABASE_STORAGE_BASE_URL}gobsrote/shrit.jfif`, arReady: true },
     { id: 'grm-7', title: 'Classic Button-Up Shirt II', category: 'Shirts', price: 58.00, shopId: GOBSTORE_UUID, store_id: GOBSTORE_UUID, image: `${SUPABASE_STORAGE_BASE_URL}gobsrote/shirt2.jfif`, image_url: `${SUPABASE_STORAGE_BASE_URL}gobsrote/shirt2.jfif`, arReady: true },
     { id: 'grm-8', title: 'Formal Dress Shirt III', category: 'Shirts', price: 62.00, shopId: GOBSTORE_UUID, store_id: GOBSTORE_UUID, image: `${SUPABASE_STORAGE_BASE_URL}gobsrote/shirt3.jfif`, image_url: `${SUPABASE_STORAGE_BASE_URL}gobsrote/shirt3.jfif`, arReady: true },
