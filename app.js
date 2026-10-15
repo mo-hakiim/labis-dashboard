@@ -112,33 +112,42 @@ function updateDashboardAuthStatus(session, message = '') {
     const authMessage = document.getElementById('dashboard-auth-message');
     if (status) status.textContent = session?.user?.email ? `Signed in as ${session.user.email}. Catalog changes are enabled for stores assigned to this account.` : 'Sign in with your Supabase Auth store account to upload and manage catalog items.';
     if (authMessage) authMessage.textContent = message;
+    const settingsMessage = document.getElementById('dashboard-settings-auth-message');
+    if (settingsMessage) settingsMessage.textContent = message;
 }
 
-async function authenticateDashboard(event) {
-    event.preventDefault();
-    const client = getSupabaseClient();
-    const message = document.getElementById('dashboard-auth-message');
-    if (!client) {
-        updateDashboardAuthStatus(null, 'Supabase client is unavailable. Check the project URL and public anon key.');
-        return;
+// Authenticated session controls the dashboard shell and profile display.
+function applyDashboardSession(session) {
+    const authenticated = Boolean(session?.user);
+    const shell = document.getElementById('dashboard-shell');
+    const gate = document.getElementById('auth-gate');
+    const email = session?.user?.email || '';
+    const metadata = session?.user?.user_metadata || {};
+    const displayName = metadata.full_name || metadata.name || metadata.display_name || email.split('@')[0] || 'Dashboard Admin';
+    const nameNode = document.getElementById('profile-name');
+    const emailNode = document.getElementById('profile-email');
+    const avatarNode = document.getElementById('profile-avatar');
+
+    if (shell) {
+        if (authenticated) {
+            shell.removeAttribute('inert');
+            shell.removeAttribute('aria-hidden');
+        } else {
+            shell.setAttribute('inert', '');
+            shell.setAttribute('aria-hidden', 'true');
+        }
     }
-    const email = document.getElementById('dashboard-auth-email').value.trim();
-    const password = document.getElementById('dashboard-auth-password').value;
-    if (message) message.textContent = 'Signing in…';
-    const { data, error } = await client.auth.signInWithPassword({ email, password });
-    if (error) {
-        updateDashboardAuthStatus(null, error.message);
-        return;
+    if (gate) gate.classList.toggle('hidden', authenticated);
+    if (nameNode) nameNode.textContent = displayName;
+    if (emailNode) emailNode.textContent = email || 'Signed out';
+    if (avatarNode) {
+        avatarNode.textContent = displayName.split(/[\s._-]+/).filter(Boolean).slice(0, 2)
+            .map(part => part[0]).join('').toUpperCase() || 'LB';
     }
-    document.getElementById('dashboard-auth-password').value = '';
-    updateDashboardAuthStatus(data.session, 'Signed in. Refreshing your stores and catalog…');
+    updateDashboardAuthStatus(session);
 }
 
-async function signOutDashboard() {
-    const client = getSupabaseClient();
-    if (!client) return;
-    const { error } = await client.auth.signOut();
-    updateDashboardAuthStatus(null, error ? error.message : 'Signed out.');
+function clearDashboardSessionData() {
     shops = [];
     garments = [];
     leads = [];
@@ -148,21 +157,85 @@ async function signOutDashboard() {
     updateStats();
 }
 
+// The later declarations intentionally replace the legacy settings-only auth
+// handlers above with the modal gate and session-driven access flow.
+async function authenticateDashboard(event) {
+    event.preventDefault();
+    const client = getSupabaseClient();
+    const message = document.getElementById('dashboard-auth-message');
+    const submitButton = document.getElementById('dashboard-auth-submit');
+    const email = document.getElementById('dashboard-auth-email')?.value.trim();
+    const passwordInput = document.getElementById('dashboard-auth-password');
+    if (message) message.textContent = '';
+    if (!client) {
+        updateDashboardAuthStatus(null, 'Supabase client is unavailable. Check the project URL, public key, and network connection.');
+        return;
+    }
+    if (!email || !passwordInput?.value) {
+        if (message) message.textContent = 'Enter your email and password.';
+        return;
+    }
+
+    if (submitButton) {
+        submitButton.disabled = true;
+        submitButton.textContent = 'Signing In…';
+    }
+    try {
+        const { data, error } = await client.auth.signInWithPassword({ email, password: passwordInput.value });
+        if (error) throw error;
+        passwordInput.value = '';
+        applyDashboardSession(data.session);
+    } catch (error) {
+        updateDashboardAuthStatus(null, error?.message || 'Unable to sign in. Please try again.');
+    } finally {
+        if (submitButton) {
+            submitButton.disabled = false;
+            submitButton.textContent = 'Sign In';
+        }
+    }
+}
+
+async function signOutDashboard() {
+    const client = getSupabaseClient();
+    if (!client) {
+        updateDashboardAuthStatus(null, 'Supabase client is unavailable.');
+        return;
+    }
+    const { error } = await client.auth.signOut();
+    if (error) {
+        updateDashboardAuthStatus({ user: { email: document.getElementById('profile-email')?.textContent } }, error.message);
+        return;
+    }
+    applyDashboardSession(null);
+    clearDashboardSessionData();
+}
+
 async function initializeDashboardAuth() {
     const client = getSupabaseClient();
     if (!client) {
+        applyDashboardSession(null);
         updateDashboardAuthStatus(null, 'Supabase client could not be initialized.');
         return;
     }
     if (supabaseAuthSubscription) supabaseAuthSubscription.unsubscribe();
-    const { data, error } = await client.auth.getSession();
-    updateDashboardAuthStatus(error ? null : data.session, error?.message || '');
     const { data: listenerData } = client.auth.onAuthStateChange((event, session) => {
-        updateDashboardAuthStatus(session);
-        if (event === 'SIGNED_IN') void syncSupabaseData();
+        applyDashboardSession(session);
+        if (event === 'SIGNED_IN') {
+            window.setTimeout(() => void syncSupabaseData(), 0);
+        } else if (event === 'SIGNED_OUT') {
+            clearDashboardSessionData();
+        }
     });
     supabaseAuthSubscription = listenerData.subscription;
-    await syncSupabaseData();
+
+    const { data, error } = await client.auth.getSession();
+    if (error) {
+        applyDashboardSession(null);
+        updateDashboardAuthStatus(null, error.message);
+        return;
+    }
+    applyDashboardSession(data.session);
+    if (data.session) await syncSupabaseData();
 }
 
 // Convert image filename/path into valid Supabase public storage URL

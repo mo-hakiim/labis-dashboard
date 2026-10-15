@@ -73,7 +73,7 @@
     <!-- Mobile Drawer Backdrop Overlay -->
     <div id="sidebar-overlay" onclick="closeMobileMenu()" aria-hidden="true"></div>
 
-    <div class="flex h-screen overflow-hidden p-2 sm:p-3 md:p-4 gap-3 md:gap-4 relative">
+    <div id="dashboard-shell" class="flex h-screen overflow-hidden p-2 sm:p-3 md:p-4 gap-3 md:gap-4 relative" inert aria-hidden="true">
         
         <!-- SIDEBAR NAVIGATION (Desktop: Multi-col / Tablet: Collapsible / Mobile: Drawer) -->
         <aside id="sidebar" class="w-64 flex-shrink-0 bg-dz-card dark:bg-lb-card rounded-3xl border border-dz-border dark:border-lb-border flex flex-col justify-between p-5 shadow-dz-card-shadow dark:shadow-lb-card-glow transition-all duration-300 z-50 md:z-30">
@@ -197,11 +197,12 @@
 
                     <!-- User Profile Badge -->
                     <div class="flex items-center gap-2 sm:gap-3 pl-1">
-                        <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150" alt="Admin" class="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl object-cover ring-2 ring-dz-forest dark:ring-lb-lime">
+                        <div id="profile-avatar" aria-hidden="true" class="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-dz-forest dark:bg-lb-lime text-white dark:text-black flex items-center justify-center font-extrabold text-xs ring-2 ring-dz-forest dark:ring-lb-lime">LB</div>
                         <div class="hidden lg:block text-left">
-                            <p class="text-xs font-bold leading-tight text-dz-text dark:text-gray-100">Labis Admin</p>
-                            <p class="text-[10px] text-dz-text-muted dark:text-lb-text-muted font-medium">admin@labis.so</p>
+                            <p id="profile-name" class="text-xs font-bold leading-tight text-dz-text dark:text-gray-100">Dashboard Admin</p>
+                            <p id="profile-email" class="text-[10px] text-dz-text-muted dark:text-lb-text-muted font-medium">Checking session…</p>
                         </div>
+                        <button type="button" onclick="signOutDashboard()" class="py-2 px-2.5 rounded-xl border border-dz-border dark:border-lb-border text-[10px] sm:text-xs font-bold min-h-[40px]">Sign Out</button>
                     </div>
                 </div>
             </header>
@@ -333,10 +334,10 @@
                                     <span class="text-[10px] bg-emerald-100 dark:bg-lb-lime-muted text-dz-forest dark:text-lb-lime px-2 py-0.5 rounded-full font-bold">Trending</span>
                                 </div>
                                 <div class="flex items-center gap-3">
-                                    <img id="top-garment-img" src="https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&q=80&w=200" class="w-14 h-14 rounded-2xl object-cover border border-dz-border dark:border-lb-border flex-shrink-0" alt="Top Garment">
+                                    <img id="top-garment-img" src="" class="w-14 h-14 rounded-2xl object-cover border border-dz-border dark:border-lb-border flex-shrink-0" alt="Top Garment">
                                     <div class="min-w-0">
-                                        <h5 id="top-garment-title" class="font-bold text-sm text-dz-text dark:text-white truncate">Somali Dirac Velvet Edition</h5>
-                                        <p id="top-garment-meta" class="text-xs text-dz-text-muted dark:text-lb-text-muted truncate">Top requested garment in catalog</p>
+                                        <h5 id="top-garment-title" class="font-bold text-sm text-dz-text dark:text-white truncate">No active garments</h5>
+                                        <p id="top-garment-meta" class="text-xs text-dz-text-muted dark:text-lb-text-muted truncate">Catalog metrics appear when products sync</p>
                                     </div>
                                 </div>
                             </div>
@@ -559,6 +560,11 @@
                                 </div>
                             </div>
 
+                            <div class="rounded-2xl border border-dz-border dark:border-lb-border p-3 space-y-2">
+                                <p id="dashboard-auth-status" class="text-xs text-dz-text-muted dark:text-lb-text-muted">Checking Supabase account…</p>
+                                <p id="dashboard-settings-auth-message" role="status" class="text-[11px] text-dz-text-muted dark:text-lb-text-muted"></p>
+                                <button type="button" onclick="signOutDashboard()" class="py-2 px-3 rounded-xl border border-dz-border dark:border-lb-border font-bold text-xs min-h-[40px]">Sign Out</button>
+                            </div>
                             <form id="api-settings-form" onsubmit="saveApiSettings(event)" class="space-y-3.5">
                                 <div class="space-y-1">
                                     <label class="text-xs font-bold text-dz-text dark:text-gray-200 flex items-center justify-between">
@@ -739,43 +745,50 @@
             <h3 class="text-base font-extrabold text-dz-text dark:text-white" id="garment-modal-heading">Add New Garment</h3>
             
             <form id="garment-form" onsubmit="saveGarment(event)" class="space-y-3">
-                <input type="hidden" id="garment-id">
-                <div>
-                    <label class="text-xs font-bold text-dz-text dark:text-gray-200 mb-1 block">Garment Name</label>
-                    <input type="text" id="garment-title" required placeholder="e.g. Dirac Silk Velvet Gold" class="w-full p-2.5 rounded-2xl bg-dz-bg dark:bg-lb-bg border border-dz-border dark:border-lb-border text-xs text-dz-text dark:text-gray-200 focus:outline-none focus:border-dz-forest dark:focus:border-lb-lime min-h-[44px]">
-                </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="text-xs font-bold text-dz-text dark:text-gray-200 mb-1 block">Category</label>
-                        <input type="text" id="garment-category" required placeholder="e.g. Dirac, Suits, Casual, Abaya..." class="w-full p-2.5 rounded-2xl bg-dz-bg dark:bg-lb-bg border border-dz-border dark:border-lb-border text-xs text-dz-text dark:text-gray-200 focus:outline-none focus:border-dz-forest dark:focus:border-lb-lime min-h-[44px]">
-                    </div>
-                    <div>
-                        <label class="text-xs font-bold text-dz-text dark:text-gray-200 mb-1 block">Price ($)</label>
-                        <input type="number" id="garment-price" required placeholder="120" class="w-full p-2.5 rounded-2xl bg-dz-bg dark:bg-lb-bg border border-dz-border dark:border-lb-border text-xs text-dz-text dark:text-gray-200 focus:outline-none focus:border-dz-forest dark:focus:border-lb-lime min-h-[44px]">
-                    </div>
-                </div>
+                <p class="text-xs text-dz-text-muted dark:text-lb-text-muted">Upload several garment images at once. Add a name, category, price, and try-on setting for each item.</p>
                 <div>
                     <label class="text-xs font-bold text-dz-text dark:text-gray-200 mb-1 block">Assigned Store</label>
-                    <select id="garment-shop" class="w-full p-2.5 rounded-2xl bg-dz-bg dark:bg-lb-bg border border-dz-border dark:border-lb-border text-xs text-dz-text dark:text-gray-200 min-h-[44px]">
-                        <!-- Populated dynamically -->
-                    </select>
+                    <select id="garment-shop" required class="w-full p-2.5 rounded-2xl bg-dz-bg dark:bg-lb-bg border border-dz-border dark:border-lb-border text-xs text-dz-text dark:text-gray-200 min-h-[44px]"></select>
                 </div>
                 <div>
-                    <label class="text-xs font-bold text-dz-text dark:text-gray-200 mb-1 block">Image Source (Upload to Supabase Storage or Paste URL)</label>
-                    <div class="space-y-2">
-                        <div class="flex items-center gap-2">
-                            <input type="file" id="garment-file-upload" accept="image/*" class="w-full text-xs text-dz-text dark:text-gray-300 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-dz-forest file:text-white dark:file:bg-lb-lime dark:file:text-black hover:file:opacity-90 cursor-pointer min-h-[44px]">
-                        </div>
-                        <div class="relative">
-                            <input type="url" id="garment-image" placeholder="Or enter Image URL (https://... or Supabase storage link)" class="w-full p-2.5 rounded-2xl bg-dz-bg dark:bg-lb-bg border border-dz-border dark:border-lb-border text-xs text-dz-text dark:text-gray-200 focus:outline-none focus:border-dz-forest dark:focus:border-lb-lime min-h-[44px]">
-                        </div>
-                        <p class="text-[10px] text-dz-text-muted dark:text-lb-text-muted">Files upload directly to the <code>garment-images</code> Supabase public storage bucket.</p>
-                    </div>
+                    <label class="text-xs font-bold text-dz-text dark:text-gray-200 mb-1 block">Garment Images</label>
+                    <input type="file" id="garment-file-upload" accept="image/*" multiple required class="w-full text-xs text-dz-text dark:text-gray-300 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-dz-forest file:text-white dark:file:bg-lb-lime dark:file:text-black hover:file:opacity-90 cursor-pointer min-h-[44px]">
+                    <p class="text-[10px] text-dz-text-muted dark:text-lb-text-muted mt-1">Original images upload to the public garment-images bucket under this store's folder.</p>
                 </div>
+                <div id="garment-bulk-items" class="max-h-[42vh] overflow-y-auto space-y-2">
+                    <p class="text-xs text-dz-text-muted dark:text-lb-text-muted">Choose one or more images to add garment details.</p>
+                </div>
+                <p id="garment-upload-status" role="status" class="text-xs text-dz-text-muted dark:text-lb-text-muted"></p>
                 <div class="pt-2 flex justify-end gap-2">
                     <button type="button" onclick="closeGarmentModal()" class="py-2.5 px-4 rounded-2xl border border-dz-border dark:border-lb-border text-xs font-bold text-dz-text-muted dark:text-lb-text-muted min-h-[44px]">Cancel</button>
-                    <button type="submit" id="garment-submit-btn" class="py-2.5 px-5 rounded-2xl bg-dz-forest dark:bg-lb-lime text-white dark:text-black font-bold text-xs shadow-md min-h-[44px]">Save Garment</button>
+                    <button type="submit" id="garment-submit-btn" class="py-2.5 px-5 rounded-2xl bg-dz-forest dark:bg-lb-lime text-white dark:text-black font-bold text-xs shadow-md min-h-[44px]">Upload Garments</button>
                 </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Sign-in gate; the dashboard shell stays inert until Supabase confirms a session. -->
+    <div id="auth-gate" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4" role="dialog" aria-modal="true" aria-labelledby="auth-gate-title">
+        <div class="w-full max-w-md rounded-3xl border border-dz-border dark:border-lb-border bg-dz-card dark:bg-lb-card p-6 sm:p-8 shadow-2xl">
+            <div class="mb-6 flex items-center gap-3">
+                <div class="w-12 h-12 rounded-2xl bg-dz-forest dark:bg-lb-lime text-white dark:text-black flex items-center justify-center font-extrabold text-xl">L</div>
+                <div>
+                    <p class="text-[10px] uppercase tracking-[0.2em] font-bold text-dz-forest dark:text-lb-lime">LABIS Dashboard</p>
+                    <h1 id="auth-gate-title" class="text-xl font-extrabold text-dz-text dark:text-white">Sign in to continue</h1>
+                </div>
+            </div>
+            <p class="text-sm text-dz-text-muted dark:text-lb-text-muted mb-5">Use your authorized dashboard account to access stores and catalog management.</p>
+            <form id="dashboard-auth-form" onsubmit="authenticateDashboard(event)" class="space-y-3">
+                <label class="block">
+                    <span class="block text-xs font-bold mb-1.5">Email</span>
+                    <input type="email" id="dashboard-auth-email" autocomplete="username" required placeholder="name@example.com" class="w-full p-3 rounded-xl bg-dz-bg dark:bg-lb-bg border border-dz-border dark:border-lb-border text-sm min-h-[46px] focus:outline-none focus:ring-2 focus:ring-emerald-500" autofocus>
+                </label>
+                <label class="block">
+                    <span class="block text-xs font-bold mb-1.5">Password</span>
+                    <input type="password" id="dashboard-auth-password" autocomplete="current-password" required placeholder="Your password" class="w-full p-3 rounded-xl bg-dz-bg dark:bg-lb-bg border border-dz-border dark:border-lb-border text-sm min-h-[46px] focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                </label>
+                <p id="dashboard-auth-message" class="min-h-5 text-xs text-red-600 dark:text-red-400" role="alert" aria-live="polite"></p>
+                <button id="dashboard-auth-submit" type="submit" class="w-full py-3 px-4 rounded-xl bg-dz-forest dark:bg-lb-lime text-white dark:text-black font-bold text-sm min-h-[46px] hover:opacity-90 disabled:opacity-60">Sign In</button>
             </form>
         </div>
     </div>
