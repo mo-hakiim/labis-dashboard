@@ -13,42 +13,48 @@
  * ==========================================================================
  */
 
-// Default Mock Data for LABIS Retail Platform
-const initialShops = [
-    { 
-        id: 'shp-1', 
-        name: 'LABIS Hargeisa Flagship', 
-        city: 'Hargeisa', 
-        manager: 'Amina Mohamed', 
-        owner_whatsapp: '+252634410293', 
-        activeGarments: 18 
-    },
-    { 
-        id: 'shp-2', 
-        name: 'LABIS Mogadishu Mall', 
-        city: 'Mogadishu', 
-        manager: 'Hassan Ali', 
-        owner_whatsapp: '+252615598201', 
-        activeGarments: 12 
-    },
-    { 
-        id: 'shp-3', 
-        name: 'LABIS Bosaso Center', 
-        city: 'Bosaso', 
-        manager: 'Fatima Jama', 
-        owner_whatsapp: '+252634991024', 
-        activeGarments: 8 
-    }
-];
+// Supabase configuration and client state must initialize before any other
+// top-level application data or startup code can access them.
+const SUPABASE_PROJECT_REF = 'pnbozvyqautludmogpjs';
+const SUPABASE_URL = `https://${SUPABASE_PROJECT_REF}.supabase.co`;
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBuYm96dnlxYXV0bHVkbW9ncGpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE0ODkyNzksImV4cCI6MjEwNzA2NTI3OX0.BZu7DURgeM5eoF-AfeGxRDchjfJnhgD6W0kq3OMNn9I';
+const SUPABASE_DEFAULT_URL = SUPABASE_URL;
+const SUPABASE_DEFAULT_ANON_KEY = SUPABASE_ANON_KEY;
+const SUPABASE_STORAGE_BUCKET = 'garment-images';
+const SUPABASE_STORAGE_BASE_URL = `${SUPABASE_URL}/storage/v1/object/public/${SUPABASE_STORAGE_BUCKET}/`;
+const STOREFRONT_BASE_URL = 'https://mo-hakiim.github.io/obstore-shop/store.html';
 
-const initialGarments = [
-    { id: 'grm-6', title: 'Tailored Shirt', category: 'Shirts', price: 55.00, shopId: GOBSTORE_UUID, store_id: GOBSTORE_UUID, image: `${SUPABASE_STORAGE_BASE_URL}gobsrote/shrit.jfif`, image_url: `${SUPABASE_STORAGE_BASE_URL}gobsrote/shrit.jfif`, arReady: true },
-    { id: 'grm-7', title: 'Classic Button-Up Shirt II', category: 'Shirts', price: 58.00, shopId: GOBSTORE_UUID, store_id: GOBSTORE_UUID, image: `${SUPABASE_STORAGE_BASE_URL}gobsrote/shirt2.jfif`, image_url: `${SUPABASE_STORAGE_BASE_URL}gobsrote/shirt2.jfif`, arReady: true },
-    { id: 'grm-8', title: 'Formal Dress Shirt III', category: 'Shirts', price: 62.00, shopId: GOBSTORE_UUID, store_id: GOBSTORE_UUID, image: `${SUPABASE_STORAGE_BASE_URL}gobsrote/shirt3.jfif`, image_url: `${SUPABASE_STORAGE_BASE_URL}gobsrote/shirt3.jfif`, arReady: true },
-    { id: 'grm-9', title: 'Slim Fit Pants', category: 'Pants', price: 65.00, shopId: GOBSTORE_UUID, store_id: GOBSTORE_UUID, image: `${SUPABASE_STORAGE_BASE_URL}gobsrote/pants.jfif`, image_url: `${SUPABASE_STORAGE_BASE_URL}gobsrote/pants.jfif`, arReady: true },
-    { id: 'grm-10', title: 'Chino Trousers II', category: 'Pants', price: 68.00, shopId: GOBSTORE_UUID, store_id: GOBSTORE_UUID, image: `${SUPABASE_STORAGE_BASE_URL}gobsrote/pants%202.jfif`, image_url: `${SUPABASE_STORAGE_BASE_URL}gobsrote/pants%202.jfif`, arReady: true },
-    { id: 'grm-11', title: 'Formal Trousers III', category: 'Pants', price: 72.00, shopId: GOBSTORE_UUID, store_id: GOBSTORE_UUID, image: `${SUPABASE_STORAGE_BASE_URL}gobsrote/pants3.jfif`, image_url: `${SUPABASE_STORAGE_BASE_URL}gobsrote/pants3.jfif`, arReady: true }
-];
+let supabaseClient = null;
+let supabaseAuthSubscription = null;
+let apiConfig = JSON.parse(localStorage.getItem('labis_api_config')) || {
+    supabaseUrl: SUPABASE_URL,
+    supabaseAnonKey: SUPABASE_ANON_KEY,
+    whatchimpKey: '',
+    webhookUrl: '',
+    leadRate: 0.25,
+    systemName: 'LABIS Master Retail'
+};
+
+if (!apiConfig.supabaseUrl) apiConfig.supabaseUrl = SUPABASE_URL;
+if (!apiConfig.supabaseAnonKey) apiConfig.supabaseAnonKey = SUPABASE_ANON_KEY;
+if (typeof apiConfig.supabaseAnonKey !== 'string' || apiConfig.supabaseAnonKey.includes('placeholder')) {
+    apiConfig.supabaseAnonKey = SUPABASE_ANON_KEY;
+}
+
+function getSupabaseClient() {
+    if (supabaseClient) return supabaseClient;
+
+    const supabaseUrl = apiConfig.supabaseUrl || SUPABASE_URL;
+    const supabaseKey = apiConfig.supabaseAnonKey || SUPABASE_ANON_KEY;
+    if (window.supabase && typeof window.supabase.createClient === 'function') {
+        try {
+            supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+        } catch (error) {
+            console.warn('Supabase client instantiation notice:', error);
+        }
+    }
+    return supabaseClient;
+}
 
 const initialLeads = [
     { id: 'ld-1', name: 'Farhia Ahmed', phone: '+252 63 4410293', shop: 'LABIS Hargeisa Flagship', store_id: 'shp-1', garment: 'Dirac Silk Velvet Royal', date: '2026-10-11 11:30 AM' },
@@ -65,15 +71,7 @@ const initialLogs = [
     { id: 'log-5', type: 'API', message: 'Supabase table `leads` row inserted successfully', timestamp: '2026-10-11 09:15:42', status: 'success' }
 ];
 
-const SUPABASE_PROJECT_REF = 'pnbozvyqautludmogpjs';
-const SUPABASE_DEFAULT_URL = `https://${SUPABASE_PROJECT_REF}.supabase.co`;
-const SUPABASE_DEFAULT_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBuYm96dnlxYXV0bHVkbW9ncGpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAzMDk1MDAsImV4cCI6MjA3NTg4NTUwMH0.placeholder';
-const SUPABASE_STORAGE_BUCKET = 'garment-images';
-const SUPABASE_STORAGE_BASE_URL = `${SUPABASE_DEFAULT_URL}/storage/v1/object/public/${SUPABASE_STORAGE_BUCKET}/`;
-
 // Active Store UUID Constants & Generation
-const GOBSTORE_UUID = 'e0c7a5f1-3d2b-4c8e-9f1a-5b7d6e4c3a2b';
-
 function generateUUID() {
     if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
         return crypto.randomUUID();
@@ -87,7 +85,7 @@ function generateUUID() {
 
 // Persistent State Initialization (Stores and Leads strictly in-memory, live-synced with Supabase)
 let shops = [];
-let garments = JSON.parse(localStorage.getItem('labis_garments')) || initialGarments;
+let garments = [];
 let leads = [];
 
 // Helper: Determine if a lead strictly belongs to an active, non-deleted store
@@ -109,33 +107,62 @@ function isLeadAssociatedWithActiveStore(lead) {
 let logs = JSON.parse(localStorage.getItem('labis_logs')) || initialLogs;
 let tryonSessionEvents = 0;
 
-let apiConfig = JSON.parse(localStorage.getItem('labis_api_config')) || {
-    supabaseUrl: SUPABASE_DEFAULT_URL,
-    supabaseAnonKey: SUPABASE_DEFAULT_ANON_KEY,
-    whatchimpKey: '',
-    webhookUrl: '',
-    leadRate: 0.25,
-    systemName: 'LABIS Master Retail'
-};
+function updateDashboardAuthStatus(session, message = '') {
+    const status = document.getElementById('dashboard-auth-status');
+    const authMessage = document.getElementById('dashboard-auth-message');
+    if (status) status.textContent = session?.user?.email ? `Signed in as ${session.user.email}. Catalog changes are enabled for stores assigned to this account.` : 'Sign in with your Supabase Auth store account to upload and manage catalog items.';
+    if (authMessage) authMessage.textContent = message;
+}
 
-if (!apiConfig.supabaseUrl) apiConfig.supabaseUrl = SUPABASE_DEFAULT_URL;
-if (!apiConfig.supabaseAnonKey) apiConfig.supabaseAnonKey = SUPABASE_DEFAULT_ANON_KEY;
-
-// Supabase Client Initializer
-let supabaseClient = null;
-function getSupabaseClient() {
-    if (supabaseClient) return supabaseClient;
-    const supabaseUrl = apiConfig.supabaseUrl || SUPABASE_DEFAULT_URL;
-    const supabaseKey = apiConfig.supabaseAnonKey || SUPABASE_DEFAULT_ANON_KEY;
-
-    if (window.supabase && typeof window.supabase.createClient === 'function') {
-        try {
-            supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
-        } catch (e) {
-            console.warn('Supabase client instantiation notice:', e);
-        }
+async function authenticateDashboard(event) {
+    event.preventDefault();
+    const client = getSupabaseClient();
+    const message = document.getElementById('dashboard-auth-message');
+    if (!client) {
+        updateDashboardAuthStatus(null, 'Supabase client is unavailable. Check the project URL and public anon key.');
+        return;
     }
-    return supabaseClient;
+    const email = document.getElementById('dashboard-auth-email').value.trim();
+    const password = document.getElementById('dashboard-auth-password').value;
+    if (message) message.textContent = 'Signing in…';
+    const { data, error } = await client.auth.signInWithPassword({ email, password });
+    if (error) {
+        updateDashboardAuthStatus(null, error.message);
+        return;
+    }
+    document.getElementById('dashboard-auth-password').value = '';
+    updateDashboardAuthStatus(data.session, 'Signed in. Refreshing your stores and catalog…');
+}
+
+async function signOutDashboard() {
+    const client = getSupabaseClient();
+    if (!client) return;
+    const { error } = await client.auth.signOut();
+    updateDashboardAuthStatus(null, error ? error.message : 'Signed out.');
+    shops = [];
+    garments = [];
+    leads = [];
+    renderShops();
+    renderGarments();
+    renderLeads();
+    updateStats();
+}
+
+async function initializeDashboardAuth() {
+    const client = getSupabaseClient();
+    if (!client) {
+        updateDashboardAuthStatus(null, 'Supabase client could not be initialized.');
+        return;
+    }
+    if (supabaseAuthSubscription) supabaseAuthSubscription.unsubscribe();
+    const { data, error } = await client.auth.getSession();
+    updateDashboardAuthStatus(error ? null : data.session, error?.message || '');
+    const { data: listenerData } = client.auth.onAuthStateChange((event, session) => {
+        updateDashboardAuthStatus(session);
+        if (event === 'SIGNED_IN') void syncSupabaseData();
+    });
+    supabaseAuthSubscription = listenerData.subscription;
+    await syncSupabaseData();
 }
 
 // Convert image filename/path into valid Supabase public storage URL
@@ -156,7 +183,7 @@ function resolveGarmentImageUrl(rawImage, category = 'Apparel') {
 // Ensure all shops have owner_whatsapp populated
 shops.forEach((s, idx) => {
     if (!s.owner_whatsapp) {
-        s.owner_whatsapp = initialShops[idx] ? initialShops[idx].owner_whatsapp : '+252634410293';
+        s.owner_whatsapp = '+252634410293';
     }
 });
 
@@ -347,7 +374,7 @@ function updateStats() {
     if (storeStat) storeStat.textContent = shops.length;
     
     // Count active garments belonging strictly to active shops
-    const activeGarments = garments.filter(g => shops.some(s => s.id === g.shopId || s.id === g.store_id));
+    const activeGarments = garments.filter(g => g.is_active !== false && shops.some(s => s.id === g.shopId || s.id === g.store_id));
     if (garmentStat) garmentStat.textContent = activeGarments.length;
     if (leadStat) leadStat.textContent = totalLeads;
     if (tryonStat) tryonStat.textContent = tryonCount.toLocaleString();
@@ -367,6 +394,13 @@ function updateStats() {
             const shop = shops.find(s => s.id === activeGarments[0].shopId || s.id === activeGarments[0].store_id);
             topMeta.textContent = `${shop ? shop.name : 'Exclusive'} • ${tryonCount} Try-ons`;
         }
+    } else {
+        const topTitle = document.getElementById('top-garment-title');
+        const topImg = document.getElementById('top-garment-img');
+        const topMeta = document.getElementById('top-garment-meta');
+        if (topTitle) topTitle.textContent = 'No active garments';
+        if (topImg) topImg.removeAttribute('src');
+        if (topMeta) topMeta.textContent = 'Catalog metrics appear when products sync';
     }
 
     updateLogBadges();
@@ -376,7 +410,7 @@ function saveToStorage() {
     // Retain only leads associated with active stores in memory
     leads = getActiveLeads();
     // Garments, telemetry logs, and platform settings remain in local config
-    localStorage.setItem('labis_garments', JSON.stringify(garments));
+    localStorage.removeItem('labis_garments');
     localStorage.setItem('labis_logs', JSON.stringify(logs));
     localStorage.setItem('labis_api_config', JSON.stringify(apiConfig));
     updateStats();
@@ -412,11 +446,11 @@ function renderInvoices() {
 
         // Pre-formatted WhatsApp Invoice payload
         const waInvoiceMessage = encodeURIComponent(
-            `Hello ${shop.name}, your LABIS invoice is ready:\n` +
-            `• Outlet: ${shop.name} (${shop.city})\n` +
-            `• Captured Customer Leads: ${shopLeadsCount}\n` +
-            `• Unit Rate: $${rate.toFixed(2)}/lead\n` +
-            `• Total Amount Due: $${outstandingBalance}\n\n` +
+            `Hello ${shop.name}, your LABIS invoice is ready:\r\n` +
+            `• Outlet: ${shop.name} (${shop.city})\r\n` +
+            `• Captured Customer Leads: ${shopLeadsCount}\r\n` +
+            `• Unit Rate: $${rate.toFixed(2)}/lead\r\n` +
+            `• Total Amount Due: $${outstandingBalance}\r\n\r\n` +
             `Please review your LABIS retail statement or reply to confirm payment.`
         );
         const waInvoiceUrl = `https://wa.me/${cleanPhone}?text=${waInvoiceMessage}`;
@@ -474,19 +508,19 @@ function downloadStoreLeadReport(shopId) {
     );
     const totalBalance = (storeLeads.length * rate).toFixed(2);
 
-    let csv = `LABIS RETAIL INVOICE & LEAD REPORT\n`;
-    csv += `Store Name:,"${shop.name}"\n`;
-    csv += `Location:,"${shop.city}"\n`;
-    csv += `Manager:,"${shop.manager}"\n`;
-    csv += `Owner WhatsApp:,"${shop.owner_whatsapp || 'N/A'}"\n`;
-    csv += `Generated Date:,"${new Date().toISOString()}"\n`;
-    csv += `Total Leads:,"${storeLeads.length}"\n`;
-    csv += `Cost Per Lead:,"$${rate.toFixed(2)}"\n`;
-    csv += `Total Outstanding Balance:,"$${totalBalance}"\n\n`;
-    csv += `Customer Name,Phone/WhatsApp,Garment Interested,Captured Date\n`;
+    let csv = `LABIS RETAIL INVOICE & LEAD REPORT\r\n`;
+    csv += `Store Name:,"${shop.name}"\r\n`;
+    csv += `Location:,"${shop.city}"\r\n`;
+    csv += `Manager:,"${shop.manager}"\r\n`;
+    csv += `Owner WhatsApp:,"${shop.owner_whatsapp || 'N/A'}"\r\n`;
+    csv += `Generated Date:,"${new Date().toISOString()}"\r\n`;
+    csv += `Total Leads:,"${storeLeads.length}"\r\n`;
+    csv += `Cost Per Lead:,"$${rate.toFixed(2)}"\r\n`;
+    csv += `Total Outstanding Balance:,"$${totalBalance}"\r\n\r\n`;
+    csv += `Customer Name,Phone/WhatsApp,Garment Interested,Captured Date\r\n`;
 
     storeLeads.forEach(l => {
-        csv += `"${l.name}","${l.phone}","${l.garment || 'General Visit'}","${l.date}"\n`;
+        csv += `"${l.name}","${l.phone}","${l.garment || 'General Visit'}","${l.date}"\r\n`;
     });
 
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -508,18 +542,18 @@ function downloadMasterLeadReport() {
     const activeLeads = getActiveLeads();
     const totalRev = (activeLeads.length * rate).toFixed(2);
 
-    let csv = `LABIS MASTER RETAIL PLATFORM — EXECUTIVE REPORT\n`;
-    csv += `Generated:,"${new Date().toLocaleString()}"\n`;
-    csv += `Total Retail Stores:,"${shops.length}"\n`;
-    csv += `Total Active Garments:,"${garments.filter(g => shops.some(s => s.id === g.shopId || s.id === g.store_id)).length}"\n`;
-    csv += `Total Try-on Sessions:,"${getTryonSessionsCount()}"\n`;
-    csv += `Total Billable Leads:,"${activeLeads.length}"\n`;
-    csv += `Unit Billing Rate:,"$${rate.toFixed(2)}/lead"\n`;
-    csv += `Gross Platform Revenue:,"$${totalRev}"\n\n`;
-    csv += `Customer Name,Phone/WhatsApp,Store Name,Garment Interested,Captured Date\n`;
+    let csv = `LABIS MASTER RETAIL PLATFORM — EXECUTIVE REPORT\r\n`;
+    csv += `Generated:,"${new Date().toLocaleString()}"\r\n`;
+    csv += `Total Retail Stores:,"${shops.length}"\r\n`;
+    csv += `Total Active Garments:,"${garments.filter(g => shops.some(s => s.id === g.shopId || s.id === g.store_id)).length}"\r\n`;
+    csv += `Total Try-on Sessions:,"${getTryonSessionsCount()}"\r\n`;
+    csv += `Total Billable Leads:,"${activeLeads.length}"\r\n`;
+    csv += `Unit Billing Rate:,"$${rate.toFixed(2)}/lead"\r\n`;
+    csv += `Gross Platform Revenue:,"$${totalRev}"\r\n\r\n`;
+    csv += `Customer Name,Phone/WhatsApp,Store Name,Garment Interested,Captured Date\r\n`;
 
     activeLeads.forEach(l => {
-        csv += `"${l.name}","${l.phone}","${l.shop}","${l.garment || 'General'}","${l.date}"\n`;
+        csv += `"${l.name}","${l.phone}","${l.shop}","${l.garment || 'General'}","${l.date}"\r\n`;
     });
 
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -557,9 +591,9 @@ function renderShops() {
 
         // Pre-populated WhatsApp message link per Specification 3
         const waMessage = encodeURIComponent(
-            `Hello ${shop.name}, here is your LABIS summary:\n` +
-            `• Captured Leads: ${shopLeadsCount}\n` +
-            `• Assigned Garments: ${shopGarmentsCount}\n` +
+            `Hello ${shop.name}, here is your LABIS summary:\r\n` +
+            `• Captured Leads: ${shopLeadsCount}\r\n` +
+            `• Assigned Garments: ${shopGarmentsCount}\r\n` +
             `• AR Try-On Status: Active`
         );
         const waLink = `https://wa.me/${cleanPhone}?text=${waMessage}`;
@@ -627,7 +661,7 @@ function closeShopModal() {
     document.getElementById('shop-modal').classList.add('hidden');
 }
 
-function saveShop(e) {
+async function saveShop(e) {
     e.preventDefault();
     const id = document.getElementById('shop-id').value;
     const name = document.getElementById('shop-name').value.trim();
@@ -641,7 +675,21 @@ function saveShop(e) {
     }
 
     const client = getSupabaseClient();
+    if (!client) {
+        alert('Supabase is unavailable. Check the project URL and public anon key in Settings.');
+        return;
+    }
+    const { data: authData, error: authError } = await client.auth.getSession();
+    if (authError || !authData.session) {
+        alert('Sign in before managing stores.');
+        return;
+    }
     if (id) {
+        const { error } = await client.from('stores').update({ name, city, manager, owner_whatsapp, phone: owner_whatsapp }).eq('id', id);
+        if (error) {
+            alert(`Unable to update store: ${error.message}`);
+            return;
+        }
         const s = shops.find(x => x.id === id);
         if (s) {
             s.name = name;
@@ -649,12 +697,10 @@ function saveShop(e) {
             s.manager = manager;
             s.owner_whatsapp = owner_whatsapp;
         }
-        if (client) {
-            client.from('stores').update({ name, city, manager, owner_whatsapp }).eq('id', id).catch(e => console.warn(e));
-        }
         addLog('SYSTEM', `Updated store: ${name} (${city}) — WhatsApp: ${owner_whatsapp}`, 'info');
     } else {
         const newId = generateUUID();
+        const slugBase = name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'store';
         const newShop = {
             id: newId,
             name,
@@ -663,17 +709,22 @@ function saveShop(e) {
             owner_whatsapp,
             activeGarments: 0
         };
-        shops.push(newShop);
-        if (client) {
-            client.from('stores').insert([{
-                id: newId,
-                name,
-                city,
-                manager,
-                owner_whatsapp,
-                phone: owner_whatsapp
-            }]).catch(e => console.warn(e));
+        const { data, error } = await client.from('stores').insert({
+            id: newId,
+            name,
+            city,
+            manager,
+            owner_whatsapp,
+            phone: owner_whatsapp,
+            slug: `${slugBase}-${newId.slice(0, 8)}`,
+            owner_id: authData.session.user.id
+        }).select('*').single();
+        if (error) {
+            alert(`Unable to create store: ${error.message}`);
+            return;
         }
+        newShop.id = data.id;
+        shops.push(newShop);
         addLog('SYSTEM', `Added new retail store: ${name} in ${city} (WhatsApp: ${owner_whatsapp})`, 'success');
     }
 
@@ -694,7 +745,7 @@ async function deleteShop(id) {
     const s = shops.find(x => x.id === id);
     const shopName = s ? s.name : id;
 
-    if (!confirm(`Are you sure you want to delete store "${shopName}"?\nAll associated garments and customer leads will be permanently cascade-removed from the dashboard and database.`)) {
+    if (!confirm(`Are you sure you want to delete store "${shopName}"?\r\nAll associated garments and customer leads will be permanently cascade-removed from the dashboard and database.`)) {
         return;
     }
 
@@ -845,6 +896,7 @@ function renderGarments() {
                                     </span>
                                 </div>
 
+                                ${item.is_active === false ? `<span class="absolute top-2.5 left-2.5 text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-500 text-white">Inactive</span>` : ''}
                                 ${item.arReady ? `
                                     <span class="absolute top-2.5 right-2.5 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500 text-black flex items-center gap-1 shadow-sm">
                                         <i class="fa-solid fa-cube text-[9px]"></i> AR Ready
@@ -870,9 +922,12 @@ function renderGarments() {
                                 <button onclick="openQrModal('GARMENT-${item.id}')" class="text-xs font-bold text-dz-forest dark:text-lb-lime hover:underline flex items-center gap-1">
                                     <i class="fa-solid fa-qrcode"></i> Try-On Link
                                 </button>
-                                <button onclick="deleteGarment('${item.id}')" class="text-red-500 hover:text-red-700 p-1" title="Delete garment">
-                                    <i class="fa-solid fa-trash"></i>
-                                </button>
+                                <div class="flex items-center gap-2">
+                                    <button onclick="toggleGarmentActive('${item.id}')" class="text-xs font-bold text-dz-forest dark:text-lb-lime hover:underline" title="Toggle storefront availability">${item.is_active === false ? 'Activate' : 'Deactivate'}</button>
+                                    <button onclick="deleteGarment('${item.id}')" class="text-red-500 hover:text-red-700 p-1" title="Delete garment">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     `).join('')}
@@ -912,6 +967,8 @@ function renderGarments() {
 function openGarmentModal() {
     populateGarmentShopSelect();
     document.getElementById('garment-form').reset();
+    document.getElementById('garment-bulk-items').innerHTML = '<p class="text-xs text-dz-text-muted dark:text-lb-text-muted">Choose one or more images to add garment details.</p>';
+    document.getElementById('garment-upload-status').textContent = '';
     document.getElementById('garment-modal').classList.remove('hidden');
 }
 
@@ -925,112 +982,164 @@ function populateGarmentShopSelect() {
     select.innerHTML = shops.map(s => `<option value="${s.id}">${s.name} (${s.city})</option>`).join('');
 }
 
+function renderBulkGarmentRows(files) {
+    const container = document.getElementById('garment-bulk-items');
+    if (!container) return;
+    if (!files.length) {
+        container.innerHTML = '<p class="text-xs text-dz-text-muted dark:text-lb-text-muted">Choose one or more images to add garment details.</p>';
+        return;
+    }
+    container.innerHTML = Array.from(files).map((file, index) => {
+        const safeName = file.name.replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
+        const guessedTitle = safeName.replace(/\.[^.]+$/, '');
+        return `<fieldset class="rounded-2xl border border-dz-border dark:border-lb-border p-3 space-y-2" data-bulk-garment="${index}">
+            <legend class="px-1 text-[10px] font-bold text-dz-text-muted dark:text-lb-text-muted">${safeName}</legend>
+            <div class="grid grid-cols-2 gap-2">
+                <input data-field="title" required value="${guessedTitle}" aria-label="Garment name" placeholder="Garment name" class="col-span-2 w-full p-2 rounded-xl bg-dz-bg dark:bg-lb-bg border border-dz-border dark:border-lb-border text-xs min-h-[40px]">
+                <input data-field="category" required value="Apparel" aria-label="Category" placeholder="Category" class="w-full p-2 rounded-xl bg-dz-bg dark:bg-lb-bg border border-dz-border dark:border-lb-border text-xs min-h-[40px]">
+                <input data-field="price" required type="number" min="0" step="0.01" aria-label="Price" placeholder="Price" class="w-full p-2 rounded-xl bg-dz-bg dark:bg-lb-bg border border-dz-border dark:border-lb-border text-xs min-h-[40px]">
+                <textarea data-field="description" rows="2" aria-label="Description" placeholder="Description (optional)" class="col-span-2 w-full p-2 rounded-xl bg-dz-bg dark:bg-lb-bg border border-dz-border dark:border-lb-border text-xs"></textarea>
+                <label class="col-span-2 flex items-center gap-2 text-xs"><input data-field="try_on_enabled" type="checkbox" checked> Enable virtual try-on</label>
+            </div>
+        </fieldset>`;
+    }).join('');
+}
+
 async function saveGarment(e) {
     e.preventDefault();
-    const title = document.getElementById('garment-title').value.trim();
-    const category = document.getElementById('garment-category').value.trim();
-    const price = parseFloat(document.getElementById('garment-price').value);
+    const client = getSupabaseClient();
     const shopId = document.getElementById('garment-shop').value;
-    let imageUrl = document.getElementById('garment-image').value.trim();
     const fileInput = document.getElementById('garment-file-upload');
     const submitBtn = document.getElementById('garment-submit-btn');
+    const status = document.getElementById('garment-upload-status');
+    const files = Array.from(fileInput.files || []);
+    const detailRows = Array.from(document.querySelectorAll('[data-bulk-garment]'));
 
-    if (!title || isNaN(price)) {
-        alert('Please enter a valid title and price.');
+    if (!client || !shopId || files.length === 0) {
+        status.textContent = !shopId ? 'Load or create a store before uploading.' : 'Choose at least one image.';
+        return;
+    }
+    if (files.some(file => !file.type.startsWith('image/'))) {
+        status.textContent = 'Every selected file must be an image.';
+        return;
+    }
+    const { data: sessionResult, error: sessionError } = await client.auth.getSession();
+    if (sessionError || !sessionResult.session) {
+        status.textContent = 'Sign in with an authorized store account before uploading.';
+        return;
+    }
+    if (detailRows.length !== files.length || detailRows.some(row => !row.querySelector('[data-field="title"]').value.trim() || !Number.isFinite(Number(row.querySelector('[data-field="price"]').value)))) {
+        status.textContent = 'Enter a name and valid price for each selected image.';
         return;
     }
 
-    if (submitBtn) {
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Uploading & Saving...';
-    }
-
-    // 1. If user selected an image file, upload to Supabase 'garment-images' bucket
-    const client = getSupabaseClient();
-    if (fileInput && fileInput.files && fileInput.files[0] && client) {
-        const file = fileInput.files[0];
-        const fileExt = file.name.split('.').pop();
-        const fileName = `garment_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${fileExt}`;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Uploading...';
+    const savedRows = [];
+    const failures = [];
+    for (let index = 0; index < files.length; index++) {
+        const file = files[index];
+        const row = detailRows[index];
+        const value = name => row.querySelector(`[data-field="${name}"]`);
+        const id = generateUUID();
+        const extension = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
+        const path = `${shopId}/${id}.${extension}`;
+        let uploadedPath = null;
         try {
-            const { data: uploadData, error: uploadErr } = await client.storage
-                .from(SUPABASE_STORAGE_BUCKET)
-                .upload(fileName, file, { cacheControl: '3600', upsert: true });
-
-            if (!uploadErr) {
-                imageUrl = `${SUPABASE_STORAGE_BASE_URL}${fileName}`;
-                addLog('API', `Uploaded garment asset to Supabase storage: ${fileName}`, 'success');
-            } else {
-                console.warn('Storage upload notice:', uploadErr);
-                // Fallback direct URL if provided
-                if (!imageUrl) imageUrl = `${SUPABASE_STORAGE_BASE_URL}${fileName}`;
+            const { error: uploadError } = await client.storage.from(SUPABASE_STORAGE_BUCKET).upload(path, file, {
+                cacheControl: '3600', upsert: false, contentType: file.type || undefined
+            });
+            if (uploadError) throw uploadError;
+            uploadedPath = path;
+            const { data: publicData } = client.storage.from(SUPABASE_STORAGE_BUCKET).getPublicUrl(path);
+            const imageUrl = publicData.publicUrl;
+            const record = {
+                id, store_id: shopId, shop_id: shopId,
+                title: value('title').value.trim(), name: value('title').value.trim(),
+                category: value('category').value.trim() || 'Apparel',
+                price: Number(value('price').value), description: value('description').value.trim(),
+                image_url: imageUrl, image_urls: [imageUrl],
+                try_on_enabled: value('try_on_enabled').checked,
+                ar_ready: value('try_on_enabled').checked, is_active: true
+            };
+            const { data, error } = await client.from('garments').insert(record).select('*').single();
+            if (error) throw error;
+            savedRows.push(data);
+            addLog('API', `Uploaded and saved garment "${record.title}"`, 'success');
+        } catch (error) {
+            console.error(`Garment upload failed (${file.name}):`, error);
+            if (uploadedPath) {
+                try {
+                    const { error: cleanupError } = await client.storage.from(SUPABASE_STORAGE_BUCKET).remove([uploadedPath]);
+                    if (cleanupError) console.warn(`Could not remove orphan image ${uploadedPath}:`, cleanupError);
+                } catch (cleanupError) {
+                    console.warn(`Could not remove orphan image ${uploadedPath}:`, cleanupError);
+                }
             }
-        } catch (err) {
-            console.warn('Storage upload exception:', err);
+            failures.push(`${file.name}: ${error.message || 'Upload or database save failed'}`);
         }
+        status.textContent = `Processed ${index + 1} of ${files.length} garments.`;
     }
 
-    if (!imageUrl) {
-        imageUrl = 'https://images.unsplash.com/photo-1556905055-8f358a7a47b2?auto=format&fit=crop&q=80&w=600';
+    const newGarments = savedRows.map(mapSupabaseGarment);
+    garments = [...newGarments, ...garments.filter(item => !newGarments.some(saved => saved.id === item.id))];
+    renderGarments();
+    updateStats();
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Upload Garments';
+    if (failures.length) {
+        status.textContent = `${savedRows.length} saved, ${failures.length} failed: ${failures.join(' | ')}`;
+    } else {
+        closeGarmentModal();
     }
+}
 
-    const newGarment = {
-        id: 'grm-' + Date.now(),
-        title,
-        category: category || 'Apparel',
-        price,
-        shopId: shopId,
-        store_id: shopId,
-        image: imageUrl,
-        image_url: imageUrl,
-        arReady: true
+function mapSupabaseGarment(row) {
+    const image = resolveGarmentImageUrl(row.image_url || row.image_urls?.[0] || row.image);
+    return {
+        id: String(row.id), dbId: row.id, title: row.title || row.name || 'Garment',
+        description: row.description || '', category: row.category || 'Apparel',
+        price: Number(row.price) || 0, shopId: row.store_id || row.shop_id,
+        store_id: row.store_id || row.shop_id, image, image_url: image,
+        arReady: row.try_on_enabled ?? row.ar_ready ?? true,
+        try_on_enabled: row.try_on_enabled ?? row.ar_ready ?? true,
+        is_active: row.is_active !== false
     };
-
-    // 2. Insert into Supabase garments table
-    if (client) {
-        try {
-            const { data: insertData, error: insertErr } = await client.from('garments').insert([{
-                title: newGarment.title,
-                category: newGarment.category,
-                price: newGarment.price,
-                shop_id: shopId,
-                store_id: shopId,
-                image_url: imageUrl
-            }]);
-            if (!insertErr) {
-                addLog('API', `Synchronized garment "${title}" to Supabase database`, 'success');
-            }
-        } catch (e) {
-            console.warn('Supabase garment insert notice:', e);
-        }
-    }
-
-    // 3. Update local state & re-render
-    garments.push(newGarment);
-    addLog('SYSTEM', `Catalog added garment: ${title} ($${price}) to store ${shopId}`, 'success');
-    saveToStorage();
-
-    if (submitBtn) {
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Save Garment';
-    }
-    closeGarmentModal();
 }
 
 async function deleteGarment(id) {
     if (confirm('Delete this garment from catalog?')) {
         const g = garments.find(x => x.id === id);
-        garments = garments.filter(x => x.id !== id);
-
         const client = getSupabaseClient();
-        if (client && g) {
-            try {
-                await client.from('garments').delete().eq('id', g.dbId || id);
-            } catch (e) {}
+        if (!client || !g) return;
+        try {
+            const { error } = await client.from('garments').delete().eq('id', g.dbId || id);
+            if (error) throw error;
+        } catch (error) {
+            alert(`Unable to delete garment: ${error.message}`);
+            return;
         }
-
+        garments = garments.filter(x => x.id !== id);
         addLog('SYSTEM', `Removed garment: ${g ? g.title : id}`, 'info');
         saveToStorage();
     }
+}
+
+async function toggleGarmentActive(id) {
+    const garment = garments.find(item => String(item.id) === String(id));
+    const client = getSupabaseClient();
+    if (!garment || !client) return;
+    const nextState = garment.is_active === false;
+    try {
+        const { error } = await client.from('garments').update({ is_active: nextState }).eq('id', garment.dbId || garment.id);
+        if (error) throw error;
+    } catch (error) {
+        alert(`Unable to update garment status: ${error.message}`);
+        return;
+    }
+    garment.is_active = nextState;
+    renderGarments();
+    updateStats();
 }
 
 // ==========================================================================
@@ -1185,9 +1294,9 @@ function exportShopLeadsCSV(shopId) {
         ))
     );
 
-    let csv = 'Customer Name,Phone/WhatsApp,Store,Garment Interested,Captured Date\n';
+    let csv = 'Customer Name,Phone/WhatsApp,Store,Garment Interested,Captured Date\r\n';
     shopLeads.forEach(l => {
-        csv += `"${l.name}","${l.phone}","${shop.name}","${l.garment || 'General Visit'}","${l.date}"\n`;
+        csv += `"${l.name}","${l.phone}","${shop.name}","${l.garment || 'General Visit'}","${l.date}"\r\n`;
     });
 
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -1207,11 +1316,11 @@ function exportShopLeadsCSV(shopId) {
  */
 function exportLeadsCSV() {
     const activeLeads = getActiveLeads();
-    let csv = 'Customer Name,WhatsApp Number\n';
+    let csv = 'Customer Name,WhatsApp Number\r\n';
     activeLeads.forEach(l => {
         const cleanPhone = cleanPhoneNumber(l.phone);
         // Format with valid phone number ready for NumberChecker.ai API/upload
-        csv += `"${l.name}","${l.phone || cleanPhone}"\n`;
+        csv += `"${l.name}","${l.phone || cleanPhone}"\r\n`;
     });
 
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -1320,12 +1429,11 @@ function openQrModal(identifier) {
 
     container.innerHTML = '';
 
-    // Create realistic URL pointing to the local storefront store.html with shop and garment params
-    let qrUrl = window.location.href.replace(/index\.html.*/, '') + `store.html?shop=${encodeURIComponent(identifier)}`;
+    let qrUrl = `${STOREFRONT_BASE_URL}?shop=${encodeURIComponent(identifier)}`;
     if (identifier.startsWith('GARMENT-')) {
         const gId = identifier.replace('GARMENT-', '');
         const garmentObj = garments.find(g => g.id === gId);
-        qrUrl = window.location.href.replace(/index\.html.*/, '') + `store.html?shop=${encodeURIComponent(garmentObj ? garmentObj.shopId : 'shp-1')}&garment=${encodeURIComponent(gId)}`;
+        qrUrl = `${STOREFRONT_BASE_URL}?shop=${encodeURIComponent(garmentObj ? garmentObj.shopId : '')}&garment=${encodeURIComponent(gId)}`;
     }
 
     urlText.textContent = qrUrl;
@@ -1390,6 +1498,7 @@ function saveApiSettings(e) {
 
     // Persist to localStorage
     localStorage.setItem('labis_api_config', JSON.stringify(apiConfig));
+    supabaseClient = null;
 
     // Instant UI state re-render bound directly to Save API Settings handler per Specification 7
     updateRevenueMetrics(newRate);
@@ -1400,7 +1509,7 @@ function saveApiSettings(e) {
 
     // If Supabase credentials provided, attempt background synchronization
     if (apiConfig.supabaseUrl && apiConfig.supabaseAnonKey) {
-        syncSupabaseData();
+        void initializeDashboardAuth();
     }
 }
 
@@ -1434,47 +1543,11 @@ async function syncSupabaseData() {
             } catch (e) {}
         }
 
-        // Check if our active store ("gobstore") exists in Supabase stores table
-        const hasGobstore = remoteStores.some(s => s.name && s.name.toLowerCase().includes('gobstore'));
-        if (!hasGobstore) {
-            const gobstoreSeed = {
-                id: GOBSTORE_UUID,
-                name: 'gobstore',
-                city: 'Hargeisa',
-                manager: 'Amina Mohamed',
-                owner_whatsapp: '+252634410293'
-            };
-            if (client) {
-                try {
-                    const { data: seededStore, error: seedErr } = await client.from('stores').upsert([gobstoreSeed], { onConflict: 'id' }).select();
-                    if (!seedErr && seededStore && seededStore.length > 0) {
-                        remoteStores.push(seededStore[0]);
-                    } else {
-                        remoteStores.push(gobstoreSeed);
-                    }
-                } catch (e) {
-                    remoteStores.push(gobstoreSeed);
-                }
-            } else {
-                try {
-                    await fetch(`${url}/rest/v1/stores`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'apikey': key,
-                            'Authorization': `Bearer ${key}`,
-                            'Prefer': 'resolution=merge-duplicates,return=representation'
-                        },
-                        body: JSON.stringify(gobstoreSeed)
-                    });
-                } catch (e) {}
-                remoteStores.push(gobstoreSeed);
-            }
-            addLog('SYSTEM', 'Seeded active store "gobstore" directly into Supabase stores table', 'success');
-        }
-
-        if (Array.isArray(remoteStores) && remoteStores.length > 0) {
-            shops = remoteStores.map(rs => ({
+        if (Array.isArray(remoteStores)) {
+            const { data: authState } = client ? await client.auth.getSession() : { data: { session: null } };
+            const signedInUserId = authState?.session?.user?.id || null;
+            const visibleStores = signedInUserId ? remoteStores.filter(store => store.owner_id === signedInUserId) : remoteStores;
+            shops = visibleStores.map(rs => ({
                 id: rs.id,
                 name: rs.name || 'gobstore',
                 city: rs.city || 'Hargeisa',
@@ -1485,88 +1558,25 @@ async function syncSupabaseData() {
             // NOTE: Strictly in-memory per requirement, NO localStorage for stores
         }
 
-        // 2. Sync Garments Table (with Public garment-images Storage Resolver & Auto-Seed)
+        // 2. Read the Supabase catalog; public writes and placeholder seeding are disabled.
         try {
             let remoteGarments = [];
             if (client) {
                 const { data, error } = await client.from('garments').select('*');
-                if (!error && Array.isArray(data) && data.length > 0) remoteGarments = data;
-            }
-            if (remoteGarments.length === 0) {
-                const resGarments = await fetch(`${url}/rest/v1/garments?select=*`, {
-                    headers: { 'apikey': key, 'Authorization': `Bearer ${key}` }
-                });
-                if (resGarments.ok) {
-                    const data = await resGarments.json();
-                    if (Array.isArray(data)) remoteGarments = data;
+                if (!error && Array.isArray(data)) {
+                    const ownedStoreIds = new Set(shops.map(shop => String(shop.id)));
+                    remoteGarments = data.filter(row => ownedStoreIds.has(String(row.store_id || row.shop_id)));
                 }
+                else if (error) addLog('ERROR', `Catalog read failed: ${error.message}`, 'error');
             }
 
-            // If garments table in Supabase is empty, automatically seed all 11 items from garment-images/gobsrote/
-            if (remoteGarments.length === 0) {
-                const targetStoreId = (shops[0] && shops[0].id) ? shops[0].id : GOBSTORE_UUID;
-                const rowsToSeed = initialGarments.map(g => ({
-                    id: g.id,
-                    store_id: targetStoreId,
-                    shop_id: targetStoreId,
-                    title: g.title,
-                    category: g.category,
-                    price: g.price,
-                    image_url: g.image_url,
-                    ar_ready: true
-                }));
-
-                if (client) {
-                    try {
-                        const { data: seeded, error: seedErr } = await client.from('garments').upsert(rowsToSeed, { onConflict: 'id' }).select();
-                        if (!seedErr && seeded && seeded.length > 0) {
-                            remoteGarments = seeded;
-                        } else {
-                            remoteGarments = rowsToSeed;
-                        }
-                    } catch (e) {
-                        remoteGarments = rowsToSeed;
-                    }
-                } else {
-                    try {
-                        const postRes = await fetch(`${url}/rest/v1/garments`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'apikey': key,
-                                'Authorization': `Bearer ${key}`,
-                                'Prefer': 'resolution=merge-duplicates,return=representation'
-                            },
-                            body: JSON.stringify(rowsToSeed)
-                        });
-                        if (postRes.ok) {
-                            remoteGarments = await postRes.json();
-                        } else {
-                            remoteGarments = rowsToSeed;
-                        }
-                    } catch (e) {
-                        remoteGarments = rowsToSeed;
-                    }
-                }
-                addLog('SYSTEM', `Seeded all 11 storage garments to public.garments table`, 'success');
-            }
-
-            if (remoteGarments.length > 0) {
-                garments = remoteGarments.map(rg => ({
-                    id: rg.id,
-                    dbId: rg.id,
-                    title: rg.title || rg.name,
-                    category: rg.category || 'Apparel',
-                    price: parseFloat(rg.price) || 49.99,
-                    shopId: rg.shop_id || rg.store_id || (shops[0] ? shops[0].id : GOBSTORE_UUID),
-                    image: resolveGarmentImageUrl(rg.image_url || rg.image),
-                    image_url: resolveGarmentImageUrl(rg.image_url || rg.image),
-                    arReady: rg.ar_ready !== undefined ? rg.ar_ready : true
-                }));
-                localStorage.setItem('labis_garments', JSON.stringify(garments));
-                addLog('API', `Synchronized ${garments.length} garments from Supabase database`, 'success');
-            }
-        } catch (e) {}
+            garments = remoteGarments.map(mapSupabaseGarment);
+            localStorage.removeItem('labis_garments');
+            addLog('API', `Loaded ${garments.length} garments from Supabase`, 'success');
+        } catch (e) {
+            garments = [];
+            console.warn('Supabase garment catalog read failed:', e);
+        }
 
         // 3. Sync Leads Table strictly from public.leads (full_name, whatsapp_number, store_id)
         try {
@@ -1588,7 +1598,7 @@ async function syncSupabaseData() {
             if (Array.isArray(remoteLeads)) {
                 // Map remote database lead rows (using full_name, whatsapp_number, store_id UUID)
                 const parsedRemoteLeads = remoteLeads.map(r => {
-                    const storeId = r.store_id || (shops[0] ? shops[0].id : GOBSTORE_UUID);
+                    const storeId = r.store_id || (shops[0] ? shops[0].id : null);
                     const matchedShop = shops.find(s => String(s.id) === String(storeId)) || 
                                         shops.find(s => s.name && r.shop && s.name.toLowerCase() === r.shop.toLowerCase()) || 
                                         shops[0];
@@ -1649,7 +1659,7 @@ function resetData() {
         localStorage.removeItem('labis_logs');
         localStorage.removeItem('labis_shops');
         localStorage.removeItem('labis_leads');
-        garments = JSON.parse(JSON.stringify(initialGarments));
+        garments = [];
         logs = JSON.parse(JSON.stringify(initialLogs));
         shops = [];
         leads = [];
@@ -1784,6 +1794,7 @@ window.addEventListener('DOMContentLoaded', () => {
     startLiveSessionTimer();
     switchTab('dashboard');
 
-    // Automatically trigger Supabase synchronization on load
-    syncSupabaseData();
+    document.getElementById('garment-file-upload')?.addEventListener('change', event => renderBulkGarmentRows(event.target.files));
+    // Resolve the persisted Supabase Auth session before reading admin-visible catalog rows.
+    void initializeDashboardAuth();
 });
