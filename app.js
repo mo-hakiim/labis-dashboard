@@ -266,6 +266,14 @@ function cleanPhoneNumber(phone) {
     return phone.replace(/[^0-9]/g, '');
 }
 
+function normalizeSomalilandPhoneNumber(phone) {
+    const digits = String(phone || '').trim().replace(/[\s-]/g, '').replace(/^\++/, '');
+    if (!/^(25263\d{7}|063\d{7}|63\d{7})$/.test(digits)) return '';
+    if (digits.startsWith('063')) return `252${digits.slice(1)}`;
+    if (digits.startsWith('63')) return `252${digits}`;
+    return digits;
+}
+
 /**
  * Filter leads strictly associated with currently active stores.
  * Excludes orphaned leads and records from deleted store outlets.
@@ -740,10 +748,15 @@ async function saveShop(e) {
     const name = document.getElementById('shop-name').value.trim();
     const city = document.getElementById('shop-city').value.trim();
     const manager = document.getElementById('shop-manager').value.trim();
-    const owner_whatsapp = document.getElementById('shop-whatsapp').value.trim();
+    const ownerWhatsappInput = document.getElementById('shop-whatsapp').value;
+    const owner_whatsapp = normalizeSomalilandPhoneNumber(ownerWhatsappInput);
 
-    if (!name || !city || !owner_whatsapp) {
+    if (!name || !city || !ownerWhatsappInput.trim()) {
         alert('Please fill all mandatory fields including Owner WhatsApp Number.');
+        return;
+    }
+    if (!owner_whatsapp) {
+        alert('Please enter a valid Somaliland number starting with 063, 63, or 25263');
         return;
     }
 
